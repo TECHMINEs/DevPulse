@@ -1,0 +1,210 @@
+const PDFDocument = require('pdfkit');
+const db = require('../db/pool');
+const wellnessService = require('./wellnessService');
+const logger = require('../utils/logger');
+
+// generate a weekly PDF report
+// TODO: add actual charts to this — currently text-only
+// looked into chart.js + node-canvas but it's tricky to install
+const generateWeeklyReport = async (userId) => {
+  const doc = new PDFDocument({
+    size: 'A4',
+    margins: { top: 50, bottom: 50, left: 50, right: 50 },
+    info: {
+      Title: 'DevPulse Weekly Report',
+      Author: 'DevPulse',
+    },
+  });
+
+  // get user info
+  const userResult = await db.query('SELECT * FROM users WHERE id = $1', [userId]);
+  const user = userResult.rows[0];
+  if (!user) throw new Error('User not found');
+
+  // get wellness data
+  const wellness = await wellnessService.getWellnessHistory(userId, 7);
+
+  // get commits count
+  const commitsResult = await db.query(`
+    SELECT COUNT(*) as count,
+           SUM(lines_added) as lines_added,
+           SUM(lines_removed) as lines_removed
+    FROM commit_snapshots
+    WHERE user_id = $1 AND committed_at >= CURRENT_DATE - 7
+  `, [userId]);
+  const commitStats = commitsResult.rows[0];
+
+  // get top repos this week
+  const topReposResult = await db.query(`
+    SELECT r.name, COUNT(cs.id) as commit_count
+    FROM commit_snapshots cs
+    JOIN repositories r ON cs.repo_id = r.id
+    WHERE cs.user_id = $1 AND cs.committed_at >= CURRENT_DATE - 7
+    GROUP BY r.name
+    ORDER BY commit_count DESC
+    LIMIT 5
+  `, [userId]);
+
+  // ============================================================================
+  // Draw PDF
+  // ============================================================================
+
+  // Header
+  doc.fontSize(28).font('Helvetica-Bold').fillColor('#6366f1')
+    .text('⚡ DevPulse', { align: 'center' });
+  doc.fontSize(12).font('Helvetica').fillColor('#94a3b8')
+    .text('Weekly Developer Intelligence Report', { align: 'center' });
+  doc.moveDown(0.5);
+  doc.fontSize(10).fillColor('#94a3b8')
+    .text(`Generated on ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`, { align: 'center' });
+  doc.moveDown(1);
+
+  // divider
+  doc.strokeColor('#334155').lineWidth(1)
+    .moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+  doc.moveDown(1);
+
+  // Developer Info
+  doc.fontSize(16).font('Helvetica-Bold').fillColor('#f1f5f9')
+    .text(`Developer: ${user.display_name || user.username}`);
+  doc.fontSize(10).font('Helvetica').fillColor('#94a3b8')
+    .text(`@${user.username} • ${user.provider}`);
+  doc.moveDown(1);
+
+  // Weekly Summary
+  doc.fontSize(16).font('Helvetica-Bold').fillColor('#f1f5f9')
+    .text('📊 Weekly Summary');
+  doc.moveDown(0.5);
+
+  const avgScore = wellness.length > 0
+    ? (wellness.reduce((sum, w) => sum + parseFloat(w.score), 0) / wellness.length).toFixed(1)
+    : 'N/A';
+
+  const summaryData = [
+    ['Average Wellness Score', avgScore],
+    ['Total Commits', commitStats.count || '0'],
+    ['Lines Added', commitStats.lines_added || '0'],
+    ['Lines Removed', commitStats.lines_removed || '0'],
+  ];
+
+  summaryData.forEach(([label, value]) => {
+    doc.fontSize(11).font('Helvetica').fillColor('#94a3b8').text(label, 70, doc.y, { continued: true });
+    doc.font('Helvetica-Bold').fillColor('#e0e7ff').text(`  ${value}`);
+  });
+  doc.moveDown(1);
+
+  // Wellness Scores
+  doc.fontSize(16).font('Helvetica-Bold').fillColor('#f1f5f9')
+    .text('📈 Daily Wellness Scores');
+  doc.moveDown(0.5);
+
+  if (wellness.length > 0) {
+    wellness.forEach((w) => {
+      const scoreColor = parseFloat(w.score) >= 70 ? '#10b981' : parseFloat(w.score) >= 40 ? '#f59e0b' : '#ef4444';
+      doc.fontSize(10).font('Helvetica').fillColor('#94a3b8')
+        .text(new Date(w.score_date).toLocaleDateString(), 70, doc.y, { continued: true });
+      doc.font('Helvetica-Bold').fillColor(scoreColor)
+        .text(`  ${parseFloat(w.score).toFixed(1)} (${w.risk_flag})`);
+    });
+  } else {
+    doc.fontSize(10).fillColor('#64748b').text('No wellness data for this week');
+  }
+  doc.moveDown(1);
+
+  // Top Repos
+  doc.fontSize(16).font('Helvetica-Bold').fillColor('#f1f5f9')
+    .text('🏆 Top Repositories');
+  doc.moveDown(0.5);
+
+  if (topReposResult.rows.length > 0) {
+    topReposResult.rows.forEach((repo, i) => {
+      doc.fontSize(10).font('Helvetica').fillColor('#94a3b8')
+        .text(`${i + 1}. ${repo.name}`, 70, doc.y, { continued: true });
+      doc.fillColor('#e0e7ff').text(`  (${repo.commit_count} commits)`);
+    });
+  } else {
+    doc.fontSize(10).fillColor('#64748b').text('No repository activity this week');
+  }
+
+  // Footer
+  doc.moveDown(2);
+  doc.strokeColor('#334155').lineWidth(0.5)
+    .moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+  doc.moveDown(0.5);
+  doc.fontSize(8).font('Helvetica').fillColor('#64748b')
+    .text('Generated by DevPulse — Your GitHub. Understood.', { align: 'center' });
+
+  doc.end();
+  return doc;
+};
+
+// generate monthly report — similar but with more data
+const generateMonthlyReport = async (userId, year, month) => {
+  const doc = new PDFDocument({ size: 'A4', margins: { top: 50, bottom: 50, left: 50, right: 50 } });
+
+  const userResult = await db.query('SELECT * FROM users WHERE id = $1', [userId]);
+  const user = userResult.rows[0];
+  if (!user) throw new Error('User not found');
+
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0);
+
+  // get monthly stats
+  const wellness = await db.query(`
+    SELECT score_date, score, risk_flag
+    FROM wellness_scores
+    WHERE user_id = $1 AND score_date >= $2 AND score_date <= $3
+    ORDER BY score_date ASC
+  `, [userId, startDate.toISOString(), endDate.toISOString()]);
+
+  const commits = await db.query(`
+    SELECT COUNT(*) as count, SUM(lines_added) as added, SUM(lines_removed) as removed
+    FROM commit_snapshots
+    WHERE user_id = $1 AND committed_at >= $2 AND committed_at <= $3
+  `, [userId, startDate.toISOString(), endDate.toISOString()]);
+
+  const monthName = startDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  // Header
+  doc.fontSize(28).font('Helvetica-Bold').fillColor('#6366f1')
+    .text('⚡ DevPulse', { align: 'center' });
+  doc.fontSize(14).font('Helvetica').fillColor('#94a3b8')
+    .text(`Monthly Report — ${monthName}`, { align: 'center' });
+  doc.moveDown(2);
+
+  // Stats
+  doc.fontSize(16).font('Helvetica-Bold').fillColor('#f1f5f9').text('Monthly Overview');
+  doc.moveDown(0.5);
+
+  const avgScore = wellness.rows.length > 0
+    ? (wellness.rows.reduce((sum, w) => sum + parseFloat(w.score), 0) / wellness.rows.length).toFixed(1)
+    : 'N/A';
+
+  doc.fontSize(11).font('Helvetica').fillColor('#94a3b8')
+    .text(`Average Wellness: ${avgScore}`);
+  doc.text(`Total Commits: ${commits.rows[0].count || 0}`);
+  doc.text(`Lines Added: ${commits.rows[0].added || 0}`);
+  doc.text(`Lines Removed: ${commits.rows[0].removed || 0}`);
+  doc.moveDown(1);
+
+  // Daily scores
+  doc.fontSize(16).font('Helvetica-Bold').fillColor('#f1f5f9').text('Daily Scores');
+  doc.moveDown(0.5);
+
+  wellness.rows.forEach((w) => {
+    const scoreColor = parseFloat(w.score) >= 70 ? '#10b981' : parseFloat(w.score) >= 40 ? '#f59e0b' : '#ef4444';
+    doc.fontSize(9).font('Helvetica').fillColor('#94a3b8')
+      .text(`${new Date(w.score_date).toLocaleDateString()} — `, 70, doc.y, { continued: true });
+    doc.font('Helvetica-Bold').fillColor(scoreColor)
+      .text(`${parseFloat(w.score).toFixed(1)}`);
+  });
+
+  doc.moveDown(2);
+  doc.fontSize(8).fillColor('#64748b')
+    .text('Generated by DevPulse — Your GitHub. Understood.', { align: 'center' });
+
+  doc.end();
+  return doc;
+};
+
+module.exports = { generateWeeklyReport, generateMonthlyReport };
