@@ -6,7 +6,6 @@ import StatCard from '../components/StatCard';
 import WellnessGauge from '../components/WellnessGauge';
 import CommitHeatmap from '../components/CommitHeatmap';
 import SparkLine from '../components/SparkLine';
-import DarkModeToggle from '../components/DarkModeToggle';
 import SyncProgressModal from '../components/SyncProgressModal';
 import useStore from '../store/useStore';
 import useSocket from '../hooks/useSocket';
@@ -89,7 +88,6 @@ const Dashboard = () => {
                   <>🔄 Sync Now</>
                 )}
               </button>
-              <DarkModeToggle />
             </div>
           </div>
         </header>
