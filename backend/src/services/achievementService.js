@@ -169,7 +169,7 @@ const checkCenturion = async (userId) => {
     SELECT COUNT(*) as count
     FROM commit_snapshots
     WHERE user_id = $1
-      AND DATE_TRUNC('month', committed_at) = DATE_TRUNC('month', CURRENT_DATE)
+        AND strftime('%Y-%m', committed_at) = strftime('%Y-%m', 'now')
   `, [userId]);
   return parseInt(result.rows[0].count) >= 100;
 };

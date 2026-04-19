@@ -44,7 +44,7 @@ router.get('/commits', authenticate, async (req, res) => {
     let query = `
       SELECT DATE(committed_at) as date, COUNT(*) as count
       FROM commit_snapshots
-      WHERE user_id = $1 AND committed_at >= CURRENT_DATE - $2::integer
+      WHERE user_id = $1 AND committed_at >= date('now', '-' || $2 || ' days')
     `;
     const params = [req.user.id, days];
 
@@ -169,14 +169,14 @@ router.get('/velocity', authenticate, async (req, res) => {
     const weeks = parseInt(req.query.weeks) || 12;
 
     const result = await db.query(`
-      SELECT DATE_TRUNC('week', committed_at) as week_start,
+      SELECT strftime('%Y-%W', committed_at) as week_start,
              COUNT(*) as commits,
              SUM(lines_added) as lines_added,
              SUM(lines_removed) as lines_removed
       FROM commit_snapshots
       WHERE user_id = $1
-        AND committed_at >= CURRENT_DATE - ($2 * 7)
-      GROUP BY DATE_TRUNC('week', committed_at)
+        AND committed_at >= date('now', '-' || ($2 * 7) || ' days')
+      GROUP BY strftime('%Y-%W', committed_at)
       ORDER BY week_start ASC
     `, [req.user.id, weeks]);
 
@@ -260,7 +260,7 @@ router.get('/benchmark', authenticate, async (req, res) => {
     // get user's actual metrics
     const commitResult = await db.query(`
       SELECT
-        COUNT(*) / GREATEST(1, (CURRENT_DATE - MIN(DATE(committed_at)))::integer / 7) as commits_per_week,
+        CAST(COUNT(*) AS REAL) / MAX(1, CAST((julianday('now') - julianday(MIN(committed_at))) / 7 AS INTEGER)) as commits_per_week,
         AVG(message_length) as avg_commit_message_length,
         AVG(CASE WHEN hour_of_day >= 0 AND hour_of_day < 5 THEN 1.0 ELSE 0.0 END) as night_commit_pct,
         AVG(CASE WHEN is_weekend THEN 1.0 ELSE 0.0 END) as weekend_commit_pct
@@ -321,8 +321,8 @@ router.get('/predictions', authenticate, async (req, res) => {
         AVG(CASE WHEN hour_of_day >= 0 AND hour_of_day < 5 THEN 1.0 ELSE 0.0 END) as night_commit_pct,
         AVG(CASE WHEN is_weekend THEN 1.0 ELSE 0.0 END) as weekend_commit_pct,
         AVG(message_length) as avg_message_length,
-        STDDEV(lines_added + lines_removed) as lines_changed_stddev,
-        COUNT(*)::float / 7 as commits_per_day,
+        AVG(ABS(lines_added + lines_removed)) as lines_changed_stddev,
+        CAST(COUNT(*) AS REAL) / 7 as commits_per_day,
         AVG(files_changed) as files_per_commit
       FROM commit_snapshots
       WHERE user_id = $1 AND committed_at >= CURRENT_DATE - 7

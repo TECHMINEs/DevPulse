@@ -232,7 +232,7 @@ const getWellnessHistory = async (userId, days = 90) => {
            commits_count, streak_days
     FROM wellness_scores
     WHERE user_id = $1
-      AND score_date >= CURRENT_DATE - $2::integer
+      AND score_date >= date('now', '-' || $2 || ' days')
     ORDER BY score_date ASC
   `, [userId, days]);
 

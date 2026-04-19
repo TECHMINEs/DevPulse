@@ -41,7 +41,7 @@ const Dashboard = () => {
   const languageChart = formatLanguageData(langData?.languages || []);
 
   // calculate this week's commits
-  const thisWeekCommits = commitData?.commits?.filter((c) => {
+  const thisWeekCommits = (commitData?.commits || []).filter((c) => {
     const d = new Date(c.date);
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
