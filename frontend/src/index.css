@@ -27,24 +27,34 @@
   }
 
   body {
-    @apply bg-surface-950 text-surface-100 font-sans;
+    @apply bg-surface-950 text-surface-200 font-sans tracking-wide;
+    background-image: 
+      radial-gradient(circle at 10% 20%, rgba(255, 0, 51, 0.08) 0%, transparent 40%),
+      radial-gradient(circle at 90% 80%, rgba(255, 0, 51, 0.08) 0%, transparent 40%);
+    background-attachment: fixed;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 }
 
 @layer components {
-  /* glass card effect */
+  /* cyber card effect */
   .glass-card {
-    @apply bg-surface-800/60 backdrop-blur-xl border border-surface-700/50 rounded-2xl;
+    @apply bg-surface-900/80 backdrop-blur-2xl border border-surface-800/80 border-t-2 border-t-primary-500/40 rounded-2xl shadow-2xl shadow-black/60 relative overflow-hidden;
+  }
+
+  /* cyber card texture overlay */
+  .glass-card::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none;
   }
 
   .glass-card-hover {
-    @apply glass-card transition-all duration-300;
+    @apply glass-card transition-all duration-500;
   }
 
   .glass-card-hover:hover {
-    @apply border-primary-500/30 shadow-lg shadow-primary-500/10 -translate-y-0.5;
+    @apply border-t-primary-500 shadow-primary-500/20 -translate-y-1 bg-surface-900/95;
   }
 
   /* gradient text */
@@ -104,7 +114,7 @@
   }
 
   .nav-item.active {
-    @apply text-primary-400 bg-primary-500/10 border-l-2 border-primary-500;
+    @apply text-primary-400 bg-gradient-to-r from-primary-500/20 to-transparent border-l-4 border-primary-500 font-semibold tracking-wider;
   }
 
   /* code rain for login page */

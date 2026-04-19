@@ -109,8 +109,10 @@ app.get('/health', (req, res) => {
 setupSocketHandlers(io);
 
 // ============================================================================
-// SCHEDULED JOBS
+// SCHEDULED JOBS AND WORKERS
 // ============================================================================
+require('./workers/syncWorker');
+
 // Weekly digest — every Monday at 8am
 // TODO: make this timezone-aware per user, for now it runs in server timezone
 cron.schedule('0 8 * * 1', async () => {

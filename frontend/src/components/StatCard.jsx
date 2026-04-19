@@ -7,19 +7,19 @@ const StatCard = ({ value, label, icon, trend, trendLabel, className = '' }) => 
   return (
     <div className={`stat-card glass-card-hover ${className}`}>
       <div className="flex items-start justify-between">
-        <span className="text-2xl">{icon}</span>
+        <span className="text-3xl drop-shadow-[0_0_10px_rgba(255,0,51,0.5)]">{icon}</span>
         {!isNeutral && (
-          <span className={`badge ${isPositive ? 'badge-success' : 'badge-danger'}`}>
+          <span className={`badge uppercase tracking-wider ${isPositive ? 'badge-success' : 'badge-danger'}`}>
             {isPositive ? '↑' : '↓'} {Math.abs(trend)}%
           </span>
         )}
       </div>
-      <div className="mt-2">
-        <p className="text-3xl font-bold tracking-tight">{value}</p>
-        <p className="text-sm text-surface-400 mt-1">{label}</p>
+      <div className="mt-4">
+        <p className="text-4xl font-black tracking-tighter text-white drop-shadow-md">{value}</p>
+        <p className="text-xs uppercase tracking-widest text-surface-400 mt-2 font-bold">{label}</p>
       </div>
       {trendLabel && (
-        <p className="text-xs text-surface-500 mt-1">{trendLabel}</p>
+        <p className="text-[10px] uppercase tracking-widest text-surface-500 mt-2">{trendLabel}</p>
       )}
     </div>
   );

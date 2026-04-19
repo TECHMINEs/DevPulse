@@ -36,11 +36,11 @@ const Sidebar = () => {
       `}>
         {/* Logo */}
         <div className="flex items-center gap-3 px-5 py-6 border-b border-surface-800">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+          <div className="w-10 h-10 rounded text-xl bg-gradient-to-br from-primary-600 to-red-950 border border-primary-500 flex items-center justify-center text-white font-bold flex-shrink-0 shadow-[0_0_15px_rgba(255,0,51,0.4)]">
             ⚡
           </div>
           {sidebarOpen && (
-            <div className="animate-fade-in">
+            <div className="animate-fade-in uppercase tracking-wider">
               <h1 className="font-bold text-lg gradient-text">DevPulse</h1>
               <p className="text-xs text-surface-500">Your GitHub. Understood.</p>
             </div>
