@@ -9,7 +9,7 @@
 @layer base {
   * {
     scrollbar-width: thin;
-    scrollbar-color: #334155 transparent;
+    scrollbar-color: #ff0033 transparent;
   }
 
   *::-webkit-scrollbar {
@@ -22,7 +22,7 @@
   }
 
   *::-webkit-scrollbar-thumb {
-    background-color: #334155;
+    background-color: #ff0033;
     border-radius: 3px;
   }
 
@@ -49,7 +49,7 @@
 
   /* gradient text */
   .gradient-text {
-    @apply bg-gradient-to-r from-primary-400 via-purple-400 to-pink-400 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-primary-400 via-red-500 to-primary-700 bg-clip-text text-transparent;
   }
 
   /* stat card */
@@ -112,7 +112,7 @@
     position: absolute;
     font-family: 'JetBrains Mono', monospace;
     font-size: 14px;
-    color: rgba(99, 102, 241, 0.15);
+    color: rgba(255, 0, 51, 0.25);
     animation: codeRainFall linear infinite;
     white-space: nowrap;
   }
@@ -169,7 +169,7 @@
 
 .recharts-cartesian-grid-horizontal line,
 .recharts-cartesian-grid-vertical line {
-  stroke: #1e293b !important;
+  stroke: #18181b !important;
 }
 
 /* smooth page transitions */

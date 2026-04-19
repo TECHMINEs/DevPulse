@@ -154,20 +154,20 @@ const Dashboard = () => {
                 <AreaChart data={wellnessChart} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
                   <defs>
                     <linearGradient id="wellnessGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#6366f1" stopOpacity={0.3} />
-                      <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
+                      <stop offset="0%" stopColor="#ff0033" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="#ff0033" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#64748b' }} tickFormatter={(d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} interval="preserveStartEnd" />
-                  <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#64748b' }} />
+                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#a1a1aa' }} tickFormatter={(d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} interval="preserveStartEnd" />
+                  <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#a1a1aa' }} />
                   <Tooltip
                     contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', fontSize: '12px' }}
                     labelStyle={{ color: '#94a3b8' }}
                     formatter={(value) => [`${value.toFixed(1)}`, 'Score']}
                     labelFormatter={(d) => new Date(d).toLocaleDateString()}
                   />
-                  <Area type="monotone" dataKey="score" stroke="#6366f1" strokeWidth={2} fill="url(#wellnessGrad)" dot={false} activeDot={{ r: 4, fill: '#6366f1' }} />
+                  <Area type="monotone" dataKey="score" stroke="#ff0033" strokeWidth={2} fill="url(#wellnessGrad)" dot={false} activeDot={{ r: 4, fill: '#ff0033' }} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -187,15 +187,15 @@ const Dashboard = () => {
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={hourlyChart} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                  <XAxis dataKey="label" tick={{ fontSize: 9, fill: '#64748b' }} interval={2} />
-                  <YAxis tick={{ fontSize: 10, fill: '#64748b' }} />
+                  <XAxis dataKey="label" tick={{ fontSize: 9, fill: '#a1a1aa' }} interval={2} />
+                  <YAxis tick={{ fontSize: 10, fill: '#a1a1aa' }} />
                   <Tooltip
                     contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', fontSize: '12px' }}
                     formatter={(value) => [value, 'Commits']}
                   />
                   <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                     {hourlyChart.map((entry, i) => (
-                      <Cell key={i} fill={entry.hourNum >= 0 && entry.hourNum < 5 ? '#ef4444' : entry.hourNum >= 9 && entry.hourNum <= 17 ? '#6366f1' : '#4338ca'} />
+                      <Cell key={i} fill={entry.hourNum >= 0 && entry.hourNum < 5 ? '#ef4444' : entry.hourNum >= 9 && entry.hourNum <= 17 ? '#ff0033' : '#bf001f'} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -256,7 +256,7 @@ const Dashboard = () => {
                       <span className="text-xs text-surface-500">{repo.commit_count} commits</span>
                       <SparkLine
                         data={(repo.velocity || []).map(v => ({ count: parseInt(v.count) }))}
-                        color="#6366f1"
+                        color="#ff0033"
                         width={80}
                         height={24}
                       />
