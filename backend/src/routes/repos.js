@@ -17,8 +17,8 @@ router.get('/', authenticate, async (req, res) => {
         (SELECT COUNT(*) FROM commit_snapshots cs WHERE cs.repo_id = r.id) as commit_count,
         (SELECT AVG(CASE WHEN cs.hour_of_day >= 0 AND cs.hour_of_day < 5 THEN 1.0 ELSE 0.0 END)
          FROM commit_snapshots cs WHERE cs.repo_id = r.id) as night_pct,
-        (SELECT COUNT(*) FROM commit_snapshots cs
-         WHERE cs.repo_id = r.id AND cs.committed_at >= CURRENT_DATE - 7) as weekly_commits
+         (SELECT COUNT(*) FROM commit_snapshots cs
+         WHERE cs.repo_id = r.id AND cs.committed_at >= date('now', '-7 days')) as weekly_commits
       FROM repositories r
       WHERE r.user_id = $1
       ORDER BY r.last_commit_at DESC NULLS LAST
@@ -45,7 +45,7 @@ router.get('/top', authenticate, async (req, res) => {
         COUNT(cs.id) as commit_count
       FROM repositories r
       JOIN commit_snapshots cs ON cs.repo_id = r.id
-      WHERE r.user_id = $1 AND cs.committed_at >= CURRENT_DATE - 30
+      WHERE r.user_id = $1 AND cs.committed_at >= date('now', '-30 days')
       GROUP BY r.id
       ORDER BY commit_count DESC
       LIMIT 3
@@ -54,10 +54,10 @@ router.get('/top', authenticate, async (req, res) => {
     // get weekly velocity for each top repo (sparkline data)
     const reposWithVelocity = await Promise.all(result.rows.map(async (repo) => {
       const velResult = await db.query(`
-        SELECT DATE_TRUNC('week', committed_at) as week, COUNT(*) as count
+        SELECT strftime('%Y-%W', committed_at) as week, COUNT(*) as count
         FROM commit_snapshots
-        WHERE repo_id = $1 AND committed_at >= CURRENT_DATE - 49
-        GROUP BY DATE_TRUNC('week', committed_at)
+        WHERE repo_id = $1 AND committed_at >= date('now', '-49 days')
+        GROUP BY strftime('%Y-%W', committed_at)
         ORDER BY week ASC
       `, [repo.id]);
       return { ...repo, velocity: velResult.rows };
@@ -94,7 +94,7 @@ router.get('/:repoId', authenticate, async (req, res) => {
     const timelineResult = await db.query(`
       SELECT DATE(committed_at) as date, COUNT(*) as count
       FROM commit_snapshots
-      WHERE repo_id = $1 AND committed_at >= CURRENT_DATE - 90
+      WHERE repo_id = $1 AND committed_at >= date('now', '-90 days')
       GROUP BY DATE(committed_at)
       ORDER BY date ASC
     `, [req.params.repoId]);
@@ -112,8 +112,8 @@ router.get('/:repoId', authenticate, async (req, res) => {
     const qualityResult = await db.query(`
       SELECT
         AVG(message_length) as avg_message_length,
-        COUNT(CASE WHEN message ~ '^(feat|fix|chore|docs|style|refactor|test|ci|build|perf):' THEN 1 END)::float
-          / GREATEST(COUNT(*), 1) * 100 as conventional_pct,
+        CAST(SUM(CASE WHEN message LIKE 'feat:%' OR message LIKE 'fix:%' OR message LIKE 'chore:%' OR message LIKE 'docs:%' OR message LIKE 'refactor:%' THEN 1 ELSE 0 END) AS REAL)
+          / MAX(COUNT(*), 1) * 100 as conventional_pct,
         COUNT(*) as total_commits,
         AVG(lines_added + lines_removed) as avg_change_size,
         MIN(committed_at) as first_commit,
