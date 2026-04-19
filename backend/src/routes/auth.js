@@ -46,7 +46,7 @@ router.get('/github', rateLimitMiddleware(authRateLimiter), async (req, res, nex
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = process.env.FRONTEND_URL || 'http://127.0.0.1:5174';
     return res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
   }
 
@@ -86,7 +86,7 @@ router.get('/github/callback',
 
       // redirect to frontend with token in URL for the client to grab
       // not ideal security-wise but needed for the OAuth redirect flow
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      const frontendUrl = process.env.FRONTEND_URL || 'http://127.0.0.1:5174';
       res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
     } catch (error) {
       logger.error('GitHub callback error', { error: error.message });
