@@ -1,31 +1,27 @@
 const axios = require('axios');
-const Redis = require('ioredis');
 const logger = require('../utils/logger');
 
-// Redis for caching GitHub API responses
-// GitHub API rate limit is 5000 req/hour per token, caching in Redis solves this
-let redis = null;
-try {
-  if (process.env.REDIS_URL) {
-    redis = new Redis(process.env.REDIS_URL, {
-      maxRetriesPerRequest: 3,
-      retryStrategy(times) {
-        if (times > 3) return null;
-        return Math.min(times * 200, 2000);
-      },
-    });
-    redis.on('error', (err) => {
-      logger.warn('Redis connection error — caching disabled', { error: err.message });
-    });
-    redis.on('connect', () => {
-      logger.info('Redis connected for GitHub API caching');
-    });
-  }
-} catch (err) {
-  logger.warn('Redis not available, proceeding without cache', { error: err.message });
-}
+// In-Memory cache for GitHub API responses since we eliminated Redis
+const memoryCache = new Map();
 
 const CACHE_TTL = 900; // 15 minutes in seconds
+
+// Helper to set cache with expiration
+const setCache = (key, value, ttlSeconds) => {
+  const expiresAt = Date.now() + (ttlSeconds * 1000);
+  memoryCache.set(key, { value, expiresAt });
+};
+
+// Helper to get from cache
+const getCache = (key) => {
+  const item = memoryCache.get(key);
+  if (!item) return null;
+  if (Date.now() > item.expiresAt) {
+    memoryCache.delete(key);
+    return null;
+  }
+  return item.value;
+};
 const GITHUB_API_BASE = 'https://api.github.com';
 
 // helper to build axios instance with auth
@@ -43,30 +39,15 @@ const createGithubClient = (accessToken) => {
 
 // cache wrapper — try cache first, fall back to API
 const cachedRequest = async (cacheKey, requestFn) => {
-  // try cache first
-  if (redis) {
-    try {
-      const cached = await redis.get(cacheKey);
-      if (cached) {
-        logger.debug('Cache hit', { key: cacheKey });
-        return JSON.parse(cached);
-      }
-    } catch (err) {
-      logger.warn('Redis get error', { error: err.message });
-    }
+  const cached = getCache(cacheKey);
+  if (cached) {
+    logger.debug('Cache hit', { key: cacheKey });
+    return cached;
   }
 
   // cache miss — make the request
   const data = await requestFn();
-
-  // store in cache
-  if (redis) {
-    try {
-      await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(data));
-    } catch (err) {
-      logger.warn('Redis set error', { error: err.message });
-    }
-  }
+  setCache(cacheKey, data, CACHE_TTL);
 
   return data;
 };
@@ -205,16 +186,16 @@ const fetchUserProfile = async (accessToken) => {
 
 // clear all cache for a user (used when force-syncing)
 const clearUserCache = async (accessToken) => {
-  if (!redis) return;
-  try {
-    const prefix = `gh:*:${accessToken.substring(0, 8)}*`;
-    const keys = await redis.keys(prefix);
-    if (keys.length > 0) {
-      await redis.del(...keys);
-      logger.info('Cleared GitHub cache', { keysCleared: keys.length });
+  const prefix = `gh:*:${accessToken.substring(0, 8)}`;
+  let cleared = 0;
+  for (const key of memoryCache.keys()) {
+    if (key.includes(prefix)) {
+      memoryCache.delete(key);
+      cleared++;
     }
-  } catch (err) {
-    logger.warn('Failed to clear cache', { error: err.message });
+  }
+  if (cleared > 0) {
+    logger.info('Cleared GitHub cache', { keysCleared: cleared });
   }
 };
 
@@ -223,6 +204,5 @@ module.exports = {
   fetchRepoCommits,
   fetchCommitDetails,
   fetchUserProfile,
-  clearUserCache,
-  redis,
+  clearUserCache
 };

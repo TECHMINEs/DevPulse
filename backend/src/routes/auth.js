@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const { authenticate } = require('../middleware/auth');
 const { rateLimitMiddleware, authRateLimiter } = require('../middleware/rateLimiter');
 const logger = require('../utils/logger');
+const { query } = require('../db/pool');
 
 /**
  * @swagger
@@ -15,10 +16,45 @@ const logger = require('../utils/logger');
  *       302:
  *         description: Redirects to GitHub OAuth page
  */
-router.get('/github', rateLimitMiddleware(authRateLimiter), passport.authenticate('github', {
-  scope: ['user:email', 'read:user', 'repo'],
-  session: false,
-}));
+router.get('/github', rateLimitMiddleware(authRateLimiter), async (req, res, next) => {
+  if (!process.env.GITHUB_CLIENT_ID || process.env.GITHUB_CLIENT_ID.includes('your_github_client_id')) {
+    logger.info('Bypassing GitHub OAuth (no credentials provided). Logging in as local Demo User.');
+    
+    // Ensure Demo User exists
+    let user = await query('SELECT * FROM users WHERE username = ?', ['demo_user']);
+    if (user.rows.length === 0) {
+      await query(`
+        INSERT INTO users (id, github_id, username, display_name, email, avatar_url, bio, provider, role)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        'demo-uuid-1234', '12345678', 'demo_user', 'Demo User', 'demo@devpulse.local', 
+        'https://avatars.githubusercontent.com/u/9919?s=200&v=4', 'Local dev account', 'github', 'user'
+      ]);
+      user = await query('SELECT * FROM users WHERE username = ?', ['demo_user']);
+    }
+
+    const token = jwt.sign(
+      { userId: user.rows[0].id, username: user.rows[0].username, role: user.rows[0].role },
+      process.env.JWT_SECRET || 'devpulse_default_secret_key',
+      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    );
+
+    res.cookie('devpulse_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    return res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
+  }
+
+  passport.authenticate('github', {
+    scope: ['user:email', 'read:user', 'repo'],
+    session: false,
+  })(req, res, next);
+});
 
 /**
  * @swagger

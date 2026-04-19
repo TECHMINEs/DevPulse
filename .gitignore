@@ -34,3 +34,5 @@ ml-service/model_info.json
 # Coverage
 coverage/
 .nyc_output/
+
+devpulse.sqlite*

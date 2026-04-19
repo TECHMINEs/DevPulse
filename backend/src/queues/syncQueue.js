@@ -1,31 +1,62 @@
-const Queue = require('bull');
 const logger = require('../utils/logger');
+// Mocking Bull queue completely in-memory
+class InMemoryQueue {
+  constructor(name) {
+    this.name = name;
+    this.queue = [];
+    this.processor = null;
+    this.isProcessing = false;
+  }
 
-// Bull queue for sync jobs — backed by Redis
-// this was a game changer for performance, syncing in the background
-// instead of blocking the API response
-const syncQueue = new Queue('sync-jobs', process.env.REDIS_URL || 'redis://localhost:6379', {
-  defaultJobOptions: {
-    attempts: 3,
-    backoff: {
-      type: 'exponential',
-      delay: 2000,
-    },
-    removeOnComplete: 50, // keep last 50 completed jobs
-    removeOnFail: 20,
-  },
-});
+  process(concurrency, fn) {
+    if (typeof concurrency === 'function') {
+      this.processor = concurrency;
+    } else {
+      this.processor = fn;
+    }
+  }
 
-syncQueue.on('error', (error) => {
-  logger.error('Sync queue error', { error: error.message });
-});
+  async add(name, data, opts) {
+    // If no name is provided, first argument is data
+    if (typeof name === 'object') {
+      this.queue.push({ name: 'default', data: name, opts });
+    } else {
+      this.queue.push({ name, data, opts });
+    }
+    logger.info(`Job added to ${this.name} queue`, { name });
+    
+    // Trigger processing asynchronously
+    setTimeout(() => this.processNext(), 100);
+    return { id: Date.now().toString() };
+  }
 
-syncQueue.on('failed', (job, error) => {
-  logger.error('Sync job failed', { jobId: job.id, error: error.message });
-});
+  async processNext() {
+    if (this.isProcessing || this.queue.length === 0 || !this.processor) return;
+    
+    this.isProcessing = true;
+    const job = this.queue.shift();
+    
+    try {
+      logger.info(`Processing job from ${this.name}`);
+      await this.processor(job);
+      logger.info(`Job completed in ${this.name}`);
+    } catch (error) {
+      logger.error(`Job failed in ${this.name}`, { error: error.message });
+      // Very basic retry logic
+      if (!job.opts?.attempt) job.opts = { ...job.opts, attempt: 1 };
+      if (job.opts.attempt < (job.opts.attempts || 3)) {
+        job.opts.attempt += 1;
+        this.queue.push(job);
+      }
+    } finally {
+      this.isProcessing = false;
+      // Process next if any
+      if (this.queue.length > 0) {
+        setTimeout(() => this.processNext(), 100);
+      }
+    }
+  }
+}
 
-syncQueue.on('completed', (job, result) => {
-  logger.info('Sync job completed', { jobId: job.id, result });
-});
-
+const syncQueue = new InMemoryQueue('github-sync');
 module.exports = { syncQueue };

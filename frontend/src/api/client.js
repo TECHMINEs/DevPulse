@@ -18,9 +18,26 @@ client.interceptors.request.use((config) => {
   return config;
 });
 
-// response interceptor — handle 401s
+const fixSafariDates = (obj) => {
+  if (obj === null || typeof obj !== 'object') return obj;
+  for (const key in obj) {
+    if (typeof obj[key] === 'string' && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d+)?$/.test(obj[key])) {
+      obj[key] = obj[key].replace(' ', 'T') + 'Z';
+    } else if (typeof obj[key] === 'object') {
+      fixSafariDates(obj[key]);
+    }
+  }
+  return obj;
+};
+
+// response interceptor — handle 401s and Safari date bug
 client.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (response.data) {
+      fixSafariDates(response.data);
+    }
+    return response;
+  },
   (error) => {
     if (error.response?.status === 401) {
       // token expired or invalid — clear auth
