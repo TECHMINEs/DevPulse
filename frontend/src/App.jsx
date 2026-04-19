@@ -58,7 +58,7 @@ function App() {
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
-        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/login/callback" element={<AuthCallback />} />
         <Route path="/profile/:username" element={<PublicProfile />} />
 
         {/* Protected routes */}

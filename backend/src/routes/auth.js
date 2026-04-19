@@ -47,7 +47,7 @@ router.get('/github', rateLimitMiddleware(authRateLimiter), async (req, res, nex
     });
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://127.0.0.1:5174';
-    return res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
+    return res.redirect(`${frontendUrl}/login/callback?token=${token}`);
   }
 
   passport.authenticate('github', {
@@ -87,7 +87,7 @@ router.get('/github/callback',
       // redirect to frontend with token in URL for the client to grab
       // not ideal security-wise but needed for the OAuth redirect flow
       const frontendUrl = process.env.FRONTEND_URL || 'http://127.0.0.1:5174';
-      res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
+      res.redirect(`${frontendUrl}/login/callback?token=${token}`);
     } catch (error) {
       logger.error('GitHub callback error', { error: error.message });
       res.redirect('/login?error=token_generation_failed');
