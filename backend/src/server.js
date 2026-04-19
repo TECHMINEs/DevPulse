@@ -154,12 +154,29 @@ app.use((err, req, res, next) => {
 // START SERVER
 // ============================================================================
 const PORT = process.env.PORT || 5000;
+const { initDB } = require('./db/pool');
+const fs = require('fs');
+const path = require('path');
 
-server.listen(PORT, () => {
-  logger.info(`🚀 DevPulse API running on port ${PORT}`);
-  logger.info(`📖 API docs available at http://localhost:${PORT}/api/docs`);
-  logger.info(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+const startServer = async () => {
+  try {
+    const db = await initDB();
+    const schemaSQL = fs.readFileSync(path.join(__dirname, 'db/schema.sql'), 'utf-8');
+    await db.exec(schemaSQL);
+    logger.info('Database schema applied');
+
+    server.listen(PORT, () => {
+      logger.info(`🚀 DevPulse API running on port ${PORT}`);
+      logger.info(`📖 API docs available at http://localhost:${PORT}/api/docs`);
+      logger.info(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+  } catch (error) {
+    logger.error('Failed to start server', { error: error.message });
+    process.exit(1);
+  }
+};
+
+startServer();
 
 // graceful shutdown
 process.on('SIGTERM', () => {

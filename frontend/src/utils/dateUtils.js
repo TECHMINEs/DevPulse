@@ -1,9 +1,18 @@
 import { format, formatDistanceToNow, startOfWeek, subDays, eachDayOfInterval } from 'date-fns';
 
-export const formatDate = (date) => format(new Date(date), 'MMM d, yyyy');
-export const formatDateTime = (date) => format(new Date(date), 'MMM d, yyyy h:mm a');
-export const formatShortDate = (date) => format(new Date(date), 'MMM d');
-export const formatTimeAgo = (date) => formatDistanceToNow(new Date(date), { addSuffix: true });
+const safeDate = (date) => {
+  if (!date) return new Date();
+  if (typeof date === 'string' && date.includes(' ') && !date.includes('T')) {
+    // Convert SQLite YYYY-MM-DD HH:MM:SS to ISO 8601 for Safari
+    return new Date(date.replace(' ', 'T') + 'Z');
+  }
+  return new Date(date);
+};
+
+export const formatDate = (date) => format(safeDate(date), 'MMM d, yyyy');
+export const formatDateTime = (date) => format(safeDate(date), 'MMM d, yyyy h:mm a');
+export const formatShortDate = (date) => format(safeDate(date), 'MMM d');
+export const formatTimeAgo = (date) => formatDistanceToNow(safeDate(date), { addSuffix: true });
 
 export const getGreeting = () => {
   const hour = new Date().getHours();

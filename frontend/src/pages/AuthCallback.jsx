@@ -12,7 +12,11 @@ const AuthCallback = () => {
     if (token) {
       // decode JWT to get basic user info
       try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const padding = '='.repeat((4 - base64.length % 4) % 4);
+        const payload = JSON.parse(window.atob(base64 + padding));
+
         setAuth(token, {
           id: payload.userId,
           username: payload.username,
