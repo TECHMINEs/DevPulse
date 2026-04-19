@@ -40,10 +40,10 @@ const TeamDashboard = () => {
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={aggregateWellness}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#64748b' }} tickFormatter={d => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#64748b' }} />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#a1a1aa' }} tickFormatter={d => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#a1a1aa' }} />
                 <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', fontSize: '12px' }} />
-                <Line type="monotone" dataKey="score" stroke="#6366f1" strokeWidth={2} dot={false} name="Team Avg" />
+                <Line type="monotone" dataKey="score" stroke="#ff0033" strokeWidth={2} dot={false} name="Team Avg" />
               </LineChart>
             </ResponsiveContainer>
           </div>

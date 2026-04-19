@@ -75,15 +75,15 @@ const RepoDetail = () => {
               <AreaChart data={timeline || []} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
                 <defs>
                   <linearGradient id="timelineGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#6366f1" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#ff0033" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#ff0033" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#64748b' }} tickFormatter={(d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} interval="preserveStartEnd" />
-                <YAxis tick={{ fontSize: 10, fill: '#64748b' }} />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#a1a1aa' }} tickFormatter={(d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} interval="preserveStartEnd" />
+                <YAxis tick={{ fontSize: 10, fill: '#a1a1aa' }} />
                 <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', fontSize: '12px' }} />
-                <Area type="monotone" dataKey="count" stroke="#6366f1" fill="url(#timelineGrad)" dot={false} />
+                <Area type="monotone" dataKey="count" stroke="#ff0033" fill="url(#timelineGrad)" dot={false} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -94,12 +94,12 @@ const RepoDetail = () => {
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={hourlyFull} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="label" tick={{ fontSize: 9, fill: '#64748b' }} interval={2} />
-                <YAxis tick={{ fontSize: 10, fill: '#64748b' }} />
+                <XAxis dataKey="label" tick={{ fontSize: 9, fill: '#a1a1aa' }} interval={2} />
+                <YAxis tick={{ fontSize: 10, fill: '#a1a1aa' }} />
                 <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', fontSize: '12px' }} />
                 <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                   {hourlyFull.map((_, i) => (
-                    <Cell key={i} fill={i >= 0 && i < 5 ? '#ef4444' : '#6366f1'} />
+                    <Cell key={i} fill={i >= 0 && i < 5 ? '#ef4444' : '#ff0033'} />
                   ))}
                 </Bar>
               </BarChart>

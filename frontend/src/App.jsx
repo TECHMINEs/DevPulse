@@ -1,33 +1,20 @@
-import React, { Suspense, lazy } from 'react';
+import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import useStore from './store/useStore';
 
-// lazy load pages for better performance
-const Login = lazy(() => import('./pages/Login'));
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Analytics = lazy(() => import('./pages/Analytics'));
-const Repos = lazy(() => import('./pages/Repos'));
-const RepoDetail = lazy(() => import('./pages/RepoDetail'));
-const Achievements = lazy(() => import('./pages/Achievements'));
-const Goals = lazy(() => import('./pages/Goals'));
-const TeamDashboard = lazy(() => import('./pages/TeamDashboard'));
-const PublicProfile = lazy(() => import('./pages/PublicProfile'));
-const Settings = lazy(() => import('./pages/Settings'));
-const AdminPanel = lazy(() => import('./pages/AdminPanel'));
-const AuthCallback = lazy(() => import('./pages/AuthCallback'));
-
-// loading spinner component
-const LoadingScreen = () => (
-  <div className="min-h-screen bg-surface-950 flex items-center justify-center">
-    <div className="flex flex-col items-center gap-4">
-      <div className="relative">
-        <div className="w-12 h-12 border-4 border-surface-700 rounded-full"></div>
-        <div className="w-12 h-12 border-4 border-primary-500 rounded-full border-t-transparent animate-spin absolute inset-0"></div>
-      </div>
-      <p className="text-surface-400 text-sm animate-pulse">Loading DevPulse...</p>
-    </div>
-  </div>
-);
+// Static imports to prevent Safari ChunkLoadError
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Analytics from './pages/Analytics';
+import Repos from './pages/Repos';
+import RepoDetail from './pages/RepoDetail';
+import Achievements from './pages/Achievements';
+import Goals from './pages/Goals';
+import TeamDashboard from './pages/TeamDashboard';
+import PublicProfile from './pages/PublicProfile';
+import Settings from './pages/Settings';
+import AdminPanel from './pages/AdminPanel';
+import AuthCallback from './pages/AuthCallback';
 
 // protected route wrapper
 const ProtectedRoute = ({ children }) => {
@@ -54,7 +41,6 @@ const AdminRoute = ({ children }) => {
 
 function App() {
   return (
-    <Suspense fallback={<LoadingScreen />}>
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
@@ -78,7 +64,6 @@ function App() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
-    </Suspense>
   );
 }
 

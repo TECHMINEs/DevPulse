@@ -56,9 +56,9 @@ const Analytics = () => {
                 <RadarChart data={radarChart}>
                   <PolarGrid stroke="#334155" />
                   <PolarAngleAxis dataKey="dimension" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                  <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 9, fill: '#64748b' }} />
-                  <Radar name="You" dataKey="user" stroke="#6366f1" fill="#6366f1" fillOpacity={0.3} strokeWidth={2} />
-                  <Radar name="Industry Avg" dataKey="benchmark" stroke="#64748b" fill="#64748b" fillOpacity={0.1} strokeWidth={1} strokeDasharray="5 5" />
+                  <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 9, fill: '#a1a1aa' }} />
+                  <Radar name="You" dataKey="user" stroke="#ff0033" fill="#ff0033" fillOpacity={0.3} strokeWidth={2} />
+                  <Radar name="Industry Avg" dataKey="benchmark" stroke="#a1a1aa" fill="#a1a1aa" fillOpacity={0.1} strokeWidth={1} strokeDasharray="5 5" />
                   <Legend
                     wrapperStyle={{ fontSize: '11px', color: '#94a3b8' }}
                   />
@@ -80,10 +80,10 @@ const Analytics = () => {
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={velocityChart} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="week" tick={{ fontSize: 10, fill: '#64748b' }} />
-                <YAxis tick={{ fontSize: 10, fill: '#64748b' }} />
+                <XAxis dataKey="week" tick={{ fontSize: 10, fill: '#a1a1aa' }} />
+                <YAxis tick={{ fontSize: 10, fill: '#a1a1aa' }} />
                 <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', fontSize: '12px' }} />
-                <Bar dataKey="commits" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="commits" fill="#ff0033" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -94,8 +94,8 @@ const Analytics = () => {
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={velocityChart} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="week" tick={{ fontSize: 10, fill: '#64748b' }} />
-                <YAxis tick={{ fontSize: 10, fill: '#64748b' }} />
+                <XAxis dataKey="week" tick={{ fontSize: 10, fill: '#a1a1aa' }} />
+                <YAxis tick={{ fontSize: 10, fill: '#a1a1aa' }} />
                 <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', fontSize: '12px' }} />
                 <Area type="monotone" dataKey="linesAdded" stackId="1" stroke="#10b981" fill="#10b981" fillOpacity={0.3} name="Added" />
                 <Area type="monotone" dataKey="linesRemoved" stackId="2" stroke="#ef4444" fill="#ef4444" fillOpacity={0.3} name="Removed" />
@@ -111,10 +111,10 @@ const Analytics = () => {
             <ResponsiveContainer width="100%" height={250}>
               <LineChart data={combinedPrediction} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#64748b' }} tickFormatter={(d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#64748b' }} />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#a1a1aa' }} tickFormatter={(d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#a1a1aa' }} />
                 <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', fontSize: '12px' }} />
-                <Line type="monotone" dataKey="actual" stroke="#6366f1" strokeWidth={2} dot={{ r: 3 }} name="Actual" connectNulls={false} />
+                <Line type="monotone" dataKey="actual" stroke="#ff0033" strokeWidth={2} dot={{ r: 3 }} name="Actual" connectNulls={false} />
                 <Line type="monotone" dataKey="predicted" stroke="#a855f7" strokeWidth={2} strokeDasharray="5 5" dot={{ r: 3 }} name="Predicted" connectNulls={false} />
                 <Legend wrapperStyle={{ fontSize: '11px' }} />
               </LineChart>

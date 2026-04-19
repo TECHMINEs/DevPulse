@@ -31,7 +31,7 @@ export const getRiskColor = (riskFlag) => {
     case 'none': return '#10b981';
     case 'caution': return '#f59e0b';
     case 'high': return '#ef4444';
-    default: return '#64748b';
+    default: return '#a1a1aa';
   }
 };
 
@@ -39,8 +39,8 @@ export const getHeatmapColor = (count, max) => {
   if (count === 0) return '#1e293b';
   const intensity = Math.min(count / Math.max(max, 1), 1);
   if (intensity < 0.25) return '#312e81';
-  if (intensity < 0.5) return '#4338ca';
-  if (intensity < 0.75) return '#6366f1';
+  if (intensity < 0.5) return '#bf001f';
+  if (intensity < 0.75) return '#ff0033';
   return '#818cf8';
 };
 

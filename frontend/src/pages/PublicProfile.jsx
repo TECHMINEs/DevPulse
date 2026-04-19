@@ -82,10 +82,10 @@ const PublicProfile = () => {
             <h2 className="text-sm font-semibold text-surface-300 mb-4">Wellness History (30 days)</h2>
             <ResponsiveContainer width="100%" height={180}>
               <AreaChart data={profile.wellness_history.map(w => ({ date: w.score_date, score: parseFloat(w.score) }))}>
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#64748b' }} tickFormatter={d => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#64748b' }} />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#a1a1aa' }} tickFormatter={d => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#a1a1aa' }} />
                 <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', fontSize: '12px' }} />
-                <Area type="monotone" dataKey="score" stroke="#6366f1" fill="#6366f133" />
+                <Area type="monotone" dataKey="score" stroke="#ff0033" fill="#ff003333" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
