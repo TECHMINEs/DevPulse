@@ -25,10 +25,14 @@ digestQueue.process('send-digests', async (job) => {
     let sent = 0;
     let failed = 0;
 
-    for (const user of users) {
-      try {
+    // process in batches of 10 to avoid overwhelming the mail server
+    const BATCH_SIZE = 10;
+    for (let i = 0; i < users.length; i += BATCH_SIZE) {
+      const batch = users.slice(i, i + BATCH_SIZE);
+
+      const results = await Promise.allSettled(batch.map(async (user) => {
         const recipientEmail = user.alert_email || user.email;
-        if (!recipientEmail) continue;
+        if (!recipientEmail) return;
 
         // get this week's data
         const weekStart = new Date();
@@ -70,7 +74,7 @@ digestQueue.process('send-digests', async (job) => {
 
         // generate AI summary (optional — requires OpenAI key)
         let aiSummary = '';
-        let aiRecommendations = '';
+        let aiRecommendations = [];
 
         if (process.env.OPENAI_API_KEY) {
           try {
@@ -81,18 +85,20 @@ digestQueue.process('send-digests', async (job) => {
               model: 'gpt-4o-mini',
               messages: [{
                 role: 'system',
-                content: 'You are a friendly developer wellness advisor. Write brief, warm, encouraging analysis.'
+                content: 'You are a friendly developer wellness advisor. Respond ONLY with valid JSON: {"summary": "...", "recommendations": ["...", "..."]}'
               }, {
                 role: 'user',
-                content: `Given this developer's data for the past week: ${dataContext}, write a brief, warm, encouraging 3-4 sentence analysis. Mention one specific positive pattern and one area to watch. Do not use jargon.`
+                content: `Given this developer's data: ${dataContext}, write a brief warm summary and 2 short recommendations.`
               }],
-              max_tokens: 200,
+              max_tokens: 250,
               temperature: 0.7,
             }, {
               headers: { 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}` },
             });
 
-            aiSummary = aiResponse.data.choices[0].message.content;
+            const parsed = JSON.parse(aiResponse.data.choices[0].message.content);
+            aiSummary = parsed.summary || '';
+            aiRecommendations = parsed.recommendations || [];
           } catch (aiError) {
             logger.warn('AI summary generation failed', { error: aiError.message });
             aiSummary = `This week you made ${totalCommits} commits with an average wellness score of ${avgScore.toFixed(1)}. Keep up the great work!`;
@@ -117,16 +123,21 @@ digestQueue.process('send-digests', async (job) => {
         await db.query(`
           INSERT INTO weekly_digests (user_id, week_start, avg_score, total_commits, top_repo, ai_summary, ai_recommendations)
           VALUES ($1, $2, $3, $4, $5, $6, $7)
-        `, [user.id, weekStartStr, avgScore, totalCommits, topRepo, aiSummary, aiRecommendations]);
+        `, [user.id, weekStartStr, avgScore, totalCommits, topRepo, aiSummary, JSON.stringify(aiRecommendations)]);
+      }));
 
-        sent++;
-      } catch (userError) {
-        logger.error('Failed to send digest to user', {
-          userId: user.id,
-          error: userError.message,
-        });
-        failed++;
-      }
+      // tally results from this batch
+      results.forEach((r, idx) => {
+        if (r.status === 'fulfilled') {
+          sent++;
+        } else {
+          failed++;
+          logger.error('Failed to send digest to user', {
+            userId: batch[idx].id,
+            error: r.reason?.message,
+          });
+        }
+      });
     }
 
     logger.info('Weekly digest job completed', { sent, failed });

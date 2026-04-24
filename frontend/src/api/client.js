@@ -9,14 +9,6 @@ const client = axios.create({
   withCredentials: true,
 });
 
-// JWT interceptor — adds token to every request
-client.interceptors.request.use((config) => {
-  const token = useStore.getState().token;
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 
 const fixSafariDates = (obj) => {
   if (obj === null || typeof obj !== 'object') return obj;
@@ -42,7 +34,7 @@ client.interceptors.response.use(
     if (error.response?.status === 401) {
       // token expired or invalid — clear auth
       useStore.getState().clearAuth();
-      window.location.href = '/login';
+      window.dispatchEvent(new CustomEvent('devpulse:unauthorized'));
     }
     return Promise.reject(error);
   }

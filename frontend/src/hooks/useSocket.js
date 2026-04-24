@@ -1,4 +1,6 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import confetti from 'canvas-confetti';
 import { io } from 'socket.io-client';
 import useStore from '../store/useStore';
 import toast from 'react-hot-toast';
@@ -12,6 +14,8 @@ export const useSocket = () => {
   const token = useStore((s) => s.token);
   const setSyncing = useStore((s) => s.setSyncing);
   const setSyncProgress = useStore((s) => s.setSyncProgress);
+  const [isConnected, setIsConnected] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!token) return;
@@ -29,6 +33,7 @@ export const useSocket = () => {
 
     socket.on('connect', () => {
       console.log('🔌 Socket connected');
+      setIsConnected(true);
       socket.emit('subscribe');
     });
 
@@ -39,6 +44,7 @@ export const useSocket = () => {
       if (data.status === 'complete') {
         setSyncing(false);
         toast.success(`Sync complete! ${data.commitsSynced} new commits found.`);
+        queryClient.invalidateQueries();
       }
     });
 
@@ -48,6 +54,23 @@ export const useSocket = () => {
         `🏆 Achievement unlocked: ${achievement.icon} ${achievement.name}`,
         { duration: 6000 }
       );
+      
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#6366f1','#8b5cf6','#d946ef','#f59e0b','#10b981'], ticks: 250 });
+
+      if (achievement.points >= 20) {
+        setTimeout(() => confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: 0, y: 0.7 }, colors: ['#6366f1','#8b5cf6'] }), 200);
+        setTimeout(() => confetti({ particleCount: 60, angle: 120, spread: 55, origin: { x: 1, y: 0.7 }, colors: ['#d946ef','#f59e0b'] }), 350);
+      }
+
+      if (achievement.points >= 50) {
+        const end = Date.now() + 2000;
+        const frame = () => {
+          confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#6366f1','#d946ef'] });
+          confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#6366f1','#d946ef'] });
+          if (Date.now() < end) requestAnimationFrame(frame);
+        };
+        setTimeout(frame, 600);
+      }
     });
 
     socket.on('score_updated', (data) => {
@@ -61,6 +84,7 @@ export const useSocket = () => {
 
     socket.on('disconnect', (reason) => {
       console.log('🔌 Socket disconnected:', reason);
+      setIsConnected(false);
     });
 
     socket.on('connect_error', (error) => {
@@ -70,6 +94,7 @@ export const useSocket = () => {
     return () => {
       socket.disconnect();
       socketRef.current = null;
+      setIsConnected(false);
     };
   }, [token, setSyncing, setSyncProgress]);
 
@@ -82,7 +107,7 @@ export const useSocket = () => {
   return {
     socket: socketRef.current,
     emit,
-    isConnected: socketRef.current?.connected || false,
+    isConnected,
   };
 };
 

@@ -193,3 +193,8 @@
   transform: translateY(0);
   transition: opacity 300ms ease-out, transform 300ms ease-out;
 }
+
+@keyframes devpulse-shimmer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}

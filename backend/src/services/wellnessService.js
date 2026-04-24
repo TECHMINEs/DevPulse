@@ -28,11 +28,14 @@ const computeWellnessScore = (features) => {
     score -= (weekend_commit_pct - 0.3) * 10;
   }
 
-  // penalize very late average commit hour (after 11pm)
-  if (avg_commit_hour > 23 || avg_commit_hour < 4) {
-    score -= 15;
-  } else if (avg_commit_hour > 21) {
-    score -= 8;
+  // penalize very late average commit hour
+  // avg_commit_hour is always in [0,23] so "> 23" was dead code — fixed.
+  if (avg_commit_hour >= 22 || avg_commit_hour < 5) {
+    score -= 15; // 10pm–5am average: major red flag
+  } else if (avg_commit_hour >= 20) {
+    score -= 8;  // 8pm–10pm average: concerning
+  } else if (avg_commit_hour >= 18) {
+    score -= 3;  // 6pm–8pm average: mild concern
   }
 
   // penalize very short commit messages (lazy commits = tired developer)
@@ -150,6 +153,21 @@ const calculateDailyWellness = async (userId, date = new Date()) => {
     lines_changed: totalLinesChanged,
   });
 
+  if (risk_flag === 'high') {
+    const userRes = await db.query('SELECT slack_webhook_url, username FROM users WHERE id = $1', [userId]);
+    const user = userRes.rows[0];
+    if (user && user.slack_webhook_url) {
+      try {
+        const axios = require('axios');
+        await axios.post(user.slack_webhook_url, {
+          text: `⚠️ *DevPulse Alert:* High burnout risk detected for ${user.username} (Score: ${score.toFixed(1)}). Consider checking in.`
+        });
+      } catch (err) {
+        logger.warn('Failed to send slack alert', { error: err.message });
+      }
+    }
+  }
+
   return { score, risk_flag, features };
 };
 
@@ -170,7 +188,7 @@ const calculateStreak = async (userId, endDate = new Date()) => {
   let currentDate = new Date(endDate);
   currentDate.setHours(0, 0, 0, 0);
 
-  const commitDates = new Set(result.rows.map(r => r.commit_date.toISOString().split('T')[0]));
+  const commitDates = new Set(result.rows.map(r => typeof r.commit_date === 'string' ? r.commit_date.substring(0, 10) : r.commit_date.toISOString().substring(0, 10)));
 
   // check today first
   const todayStr = currentDate.toISOString().split('T')[0];

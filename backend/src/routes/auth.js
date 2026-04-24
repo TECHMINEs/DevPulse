@@ -16,44 +16,16 @@ const { query } = require('../db/pool');
  *       302:
  *         description: Redirects to GitHub OAuth page
  */
-router.get('/github', rateLimitMiddleware(authRateLimiter), async (req, res, next) => {
-  if (!process.env.GITHUB_CLIENT_ID || process.env.GITHUB_CLIENT_ID.includes('your_github_client_id')) {
-    logger.info('Bypassing GitHub OAuth (no credentials provided). Logging in as local Demo User.');
-    
-    // Ensure Demo User exists
-    let user = await query('SELECT * FROM users WHERE username = ?', ['demo_user']);
-    if (user.rows.length === 0) {
-      await query(`
-        INSERT INTO users (id, github_id, username, display_name, email, avatar_url, bio, provider, role)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `, [
-        'demo-uuid-1234', '12345678', 'demo_user', 'Demo User', 'demo@devpulse.local', 
-        'https://avatars.githubusercontent.com/u/9919?s=200&v=4', 'Local dev account', 'github', 'user'
-      ]);
-      user = await query('SELECT * FROM users WHERE username = ?', ['demo_user']);
-    }
-
-    const token = jwt.sign(
-      { userId: user.rows[0].id, username: user.rows[0].username, role: user.rows[0].role },
-      process.env.JWT_SECRET || 'devpulse_default_secret_key',
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-    );
-
-    res.cookie('devpulse_token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    return res.redirect(`${frontendUrl}/login/callback?token=${token}`);
+router.get('/github', rateLimitMiddleware(authRateLimiter), (req, res, next) => {
+  try {
+    passport.authenticate('github', {
+      scope: ['user:email', 'read:user', 'repo'],
+      session: false,
+    })(req, res, next);
+  } catch (error) {
+    logger.error('Passport authenticate error', { error: error.message });
+    res.status(500).json({ error: 'Auth initialization failed' });
   }
-
-  passport.authenticate('github', {
-    scope: ['user:email', 'read:user', 'repo'],
-    session: false,
-  })(req, res, next);
 });
 
 /**
@@ -71,7 +43,7 @@ router.get('/github/callback',
   (req, res) => {
     try {
       const token = jwt.sign(
-        { userId: req.user.id, username: req.user.username, role: req.user.role },
+        { userId: req.user.id, username: req.user.username, role: req.user.role, token_version: req.user.token_version },
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
       );
@@ -128,9 +100,15 @@ router.get('/gitlab/callback', (req, res) => {
  *       200:
  *         description: Successfully logged out
  */
-router.post('/logout', (req, res) => {
-  res.clearCookie('devpulse_token');
-  res.json({ message: 'Logged out successfully' });
+router.post('/logout', authenticate, async (req, res) => {
+  try {
+    await query('UPDATE users SET token_version = token_version + 1 WHERE id = $1', [req.user.id]);
+    res.clearCookie('devpulse_token');
+    res.json({ message: 'Logged out successfully' });
+  } catch (error) {
+    logger.error('Logout error', { error: error.message });
+    res.status(500).json({ error: 'Failed to logout' });
+  }
 });
 
 /**

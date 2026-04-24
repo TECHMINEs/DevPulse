@@ -15,13 +15,19 @@ import PublicProfile from './pages/PublicProfile';
 import Settings from './pages/Settings';
 import AdminPanel from './pages/AdminPanel';
 import AuthCallback from './pages/AuthCallback';
+import Onboarding from './pages/Onboarding';
+import CommandPalette from './components/CommandPalette';
+import NavigationProgress from './components/NavigationProgress';
+import MobileNav from './components/MobileNav';
+
+import { useEffect } from 'react';
 
 // protected route wrapper
 const ProtectedRoute = ({ children }) => {
-  const token = useStore((s) => s.token);
+  const user = useStore((s) => s.user);
   const location = useLocation();
 
-  if (!token) {
+  if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
@@ -40,7 +46,20 @@ const AdminRoute = ({ children }) => {
 };
 
 function App() {
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      useStore.getState().clearAuth();
+      window.location.href = '/login';
+    };
+    window.addEventListener('devpulse:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('devpulse:unauthorized', handleUnauthorized);
+  }, []);
+
   return (
+    <>
+      <NavigationProgress />
+      <MobileNav />
+      <CommandPalette />
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
@@ -48,6 +67,7 @@ function App() {
         <Route path="/profile/:username" element={<PublicProfile />} />
 
         {/* Protected routes */}
+        <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
         <Route path="/repos" element={<ProtectedRoute><Repos /></ProtectedRoute>} />
@@ -64,6 +84,7 @@ function App() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
+    </>
   );
 }
 

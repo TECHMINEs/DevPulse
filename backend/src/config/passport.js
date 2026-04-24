@@ -1,6 +1,7 @@
 const GitHubStrategy = require('passport-github2').Strategy;
 const db = require('../db/pool');
 const logger = require('../utils/logger');
+const { encrypt } = require('../utils/crypto');
 
 // took me a while to figure out passport-github2 vs passport-github — use v2
 // v1 doesn't handle the scope properly for newer GitHub API versions
@@ -42,7 +43,7 @@ module.exports = function(passport) {
             location = EXCLUDED.location,
             company = EXCLUDED.company,
             access_token = EXCLUDED.access_token,
-            updated_at = NOW()
+            updated_at = CURRENT_TIMESTAMP
           RETURNING *
         `, [
           profile.id,
@@ -53,7 +54,7 @@ module.exports = function(passport) {
           profile._json.bio,
           profile._json.location,
           profile._json.company,
-          accessToken,
+          encrypt(accessToken),
         ]);
 
         logger.info('GitHub OAuth: user upserted', { username: profile.username });

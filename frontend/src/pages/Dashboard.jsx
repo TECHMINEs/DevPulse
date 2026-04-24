@@ -1,5 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Navigate } from 'react-router-dom';
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import Sidebar from '../components/Sidebar';
 import StatCard from '../components/StatCard';
@@ -10,11 +11,12 @@ import SyncProgressModal from '../components/SyncProgressModal';
 import useStore from '../store/useStore';
 import useSocket from '../hooks/useSocket';
 import useSync from '../hooks/useSync';
-import { getProfile, getWellness, getCommits, getHourly, getLanguages, getEarnedAchievements } from '../api/analytics';
+import { getDashboardData } from '../api/analytics';
 import { getTopRepos } from '../api/repos';
 import { formatWellnessData, formatHourlyData, formatLanguageData } from '../utils/chartHelpers';
 import { getGreeting, formatTimeAgo } from '../utils/dateUtils';
 import { getScoreColor } from '../utils/scoreUtils';
+import SkeletonBox from '../components/SkeletonBox';
 
 const Dashboard = () => {
   const user = useStore((s) => s.user);
@@ -24,15 +26,19 @@ const Dashboard = () => {
   const { triggerSync, isTriggering } = useSync();
 
   // fetch all dashboard data
-  const { data: profileData } = useQuery({ queryKey: ['profile'], queryFn: getProfile });
-  const { data: wellnessData } = useQuery({ queryKey: ['wellness', 90], queryFn: () => getWellness(90) });
-  const { data: commitData } = useQuery({ queryKey: ['commits'], queryFn: () => getCommits(365) });
-  const { data: hourlyData } = useQuery({ queryKey: ['hourly'], queryFn: getHourly });
-  const { data: langData } = useQuery({ queryKey: ['languages'], queryFn: getLanguages });
-  const { data: topReposData } = useQuery({ queryKey: ['topRepos'], queryFn: getTopRepos });
-  const { data: achievementsData } = useQuery({ queryKey: ['earnedAchievements'], queryFn: getEarnedAchievements });
+  const { data: dash, isLoading: profileLoading, isError: profileError } = useQuery({ queryKey: ['dashboard'], queryFn: getDashboardData, staleTime: 60_000 });
+  const profile = dash?.profile;
+  const wellnessData = { wellness: dash?.wellness || [] };
+  const commitData = { commits: dash?.commits || [] };
+  const hourlyData = { hourly: dash?.hourly || [] };
+  const langData = { languages: dash?.languages || [] };
+  const topReposData = { repos: dash?.repos || [] };
+  const achievementsData = { achievements: dash?.achievements || [] };
 
-  const profile = profileData?.profile;
+  if (dash && profile && !profile.onboarding_completed) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
   const currentScore = profile?.current_wellness?.score ? parseFloat(profile.current_wellness.score) : 0;
   const streak = profile?.current_wellness?.streak_days || 0;
   const wellnessChart = formatWellnessData(wellnessData?.wellness || []);
@@ -53,6 +59,42 @@ const Dashboard = () => {
     : 0;
 
   const recentAchievements = (achievementsData?.achievements || []).slice(0, 3);
+
+  if (profileError) {
+    return (
+      <div className="flex min-h-screen bg-surface-950">
+        <Sidebar />
+        <main className="flex-1 p-6 flex items-center justify-center">
+          <div className="glass-card p-8 text-center">
+            <p className="text-2xl mb-3">Something went wrong</p>
+            <p className="text-sm text-surface-400 mb-4">Could not load your dashboard data.</p>
+            <button className="btn-primary text-sm" onClick={() => window.location.reload()}>
+              Retry
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (profileLoading) {
+    return (
+      <div className="flex min-h-screen bg-surface-950">
+        <Sidebar />
+        <main className="flex-1 p-6 space-y-6">
+          <div className="grid grid-cols-4 gap-4">
+            <SkeletonBox /><SkeletonBox /><SkeletonBox /><SkeletonBox />
+          </div>
+          <div className="grid grid-cols-2 gap-6">
+            <SkeletonBox h="280px" /><SkeletonBox h="280px" />
+          </div>
+          <div className="grid grid-cols-2 gap-6">
+            <SkeletonBox h="240px" /><SkeletonBox h="240px" />
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-surface-950">

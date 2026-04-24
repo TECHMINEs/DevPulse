@@ -27,12 +27,17 @@ app = FastAPI(
 )
 
 # CORS — needed for direct browser calls during development
+ALLOWED_ORIGINS = [
+    os.getenv("BACKEND_URL", "http://localhost:5000"),
+    os.getenv("FRONTEND_URL", "http://localhost:5173"),
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 # ============================================================================

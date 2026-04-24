@@ -17,13 +17,6 @@ export const useSync = () => {
       toast.error(error.response?.data?.error || 'Failed to start sync');
       setSyncing(false);
     },
-    onSettled: () => {
-      // invalidate all queries after sync to refresh data
-      // small delay to let the worker process
-      setTimeout(() => {
-        queryClient.invalidateQueries();
-      }, 2000);
-    },
   });
 
   return {

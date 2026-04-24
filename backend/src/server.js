@@ -31,7 +31,9 @@ const server = http.createServer(app);
 // had to figure out CORS + auth handshake together
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: process.env.NODE_ENV === 'production' 
+      ? process.env.FRONTEND_URL 
+      : [process.env.FRONTEND_URL, 'http://localhost:5173', 'http://127.0.0.1:5173'],
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -48,17 +50,30 @@ app.set('io', io);
 
 // security headers — helmet is a must
 app.use(helmet({
-  contentSecurityPolicy: false, // disabled for swagger UI, revisit later
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net"],
+      imgSrc: ["'self'", "data:", "https://avatars.githubusercontent.com", "https://raw.githubusercontent.com"],
+      connectSrc: ["'self'", "https://api.github.com", process.env.ML_SERVICE_URL || "http://localhost:8000"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+    },
+  },
   crossOriginEmbedderPolicy: false,
 }));
 
-// CORS — took a while to get this right with credentials + cookies
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production' 
+    ? process.env.FRONTEND_URL 
+    : [process.env.FRONTEND_URL, 'http://localhost:5173', 'http://127.0.0.1:5173'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+};
+
+// CORS — took a while to get this right with credentials + cookies
+app.use(cors(corsOptions));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));

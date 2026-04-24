@@ -5,6 +5,29 @@ const wellnessService = require('../services/wellnessService');
 const mlService = require('../services/mlService');
 const logger = require('../utils/logger');
 
+router.get('/dashboard', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const [profileResult, wellnessResult, commitsResult, hourlyResult, languagesResult, reposResult, achievementsResult] = await Promise.all([
+      db.query(`SELECT u.*,
+        (SELECT COUNT(*) FROM commit_snapshots WHERE user_id=u.id) as total_commits,
+        (SELECT COUNT(*) FROM repositories WHERE user_id=u.id) as total_repos,
+        (SELECT ws.score FROM wellness_scores ws WHERE ws.user_id=u.id ORDER BY ws.score_date DESC LIMIT 1) as current_score,
+        (SELECT ws.streak_days FROM wellness_scores ws WHERE ws.user_id=u.id ORDER BY ws.score_date DESC LIMIT 1) as streak_days,
+        (SELECT ws.risk_flag FROM wellness_scores ws WHERE ws.user_id=u.id ORDER BY ws.score_date DESC LIMIT 1) as risk_flag
+        FROM users u WHERE u.id=$1`, [userId]),
+      wellnessService.getWellnessHistory(userId, 90),
+      db.query('SELECT DATE(committed_at) as date, COUNT(*) as count FROM commit_snapshots WHERE user_id=$1 AND committed_at >= CURRENT_DATE - 365 GROUP BY DATE(committed_at) ORDER BY date ASC', [userId]),
+      db.query('SELECT hour_of_day as hour, COUNT(*) as count FROM commit_snapshots WHERE user_id=$1 GROUP BY hour_of_day ORDER BY hour_of_day', [userId]),
+      db.query('SELECT language, COUNT(*) as count FROM repositories WHERE user_id=$1 AND language IS NOT NULL GROUP BY language ORDER BY count DESC LIMIT 10', [userId]),
+      db.query(`SELECT r.id, r.name, r.description, r.language, COUNT(cs.id) as commit_count FROM repositories r LEFT JOIN commit_snapshots cs ON r.id=cs.repo_id AND cs.committed_at >= CURRENT_DATE - 30 WHERE r.user_id=$1 GROUP BY r.id ORDER BY commit_count DESC LIMIT 6`, [userId]),
+      db.query('SELECT a.*, ua.earned_at FROM user_achievements ua JOIN achievements a ON ua.achievement_id=a.id WHERE ua.user_id=$1 ORDER BY ua.earned_at DESC LIMIT 3', [userId]),
+    ]);
+    res.json({ profile: profileResult.rows[0], wellness: wellnessResult, commits: commitsResult.rows, hourly: hourlyResult.rows, languages: languagesResult.rows, repos: reposResult.rows, achievements: achievementsResult.rows });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load dashboard data' });
+  }
+});
 /**
  * @swagger
  * /api/analytics/wellness:
