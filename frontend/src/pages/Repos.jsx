@@ -17,7 +17,7 @@ const Repos = () => {
 
   // filter and sort
   let filtered = repos
-    .filter(r => r.name.toLowerCase().includes(search.toLowerCase()))
+    .filter(r => (r.name || '').toLowerCase().includes(search.toLowerCase()))
     .filter(r => langFilter === 'all' || r.language === langFilter);
 
   if (sortBy === 'activity') {
@@ -78,10 +78,11 @@ const Repos = () => {
           )}
 
           {filtered.length === 0 && !isLoading && (
-            <div className="text-center py-12">
-              <span className="text-4xl">📂</span>
-              <p className="text-surface-400 mt-4">No repositories found</p>
-              <p className="text-xs text-surface-500 mt-1">Try adjusting your filters or sync your data</p>
+            <div className="glass-card flex flex-col items-center justify-center py-20 px-4 text-center mt-8">
+              <span className="text-6xl mb-4 drop-shadow-2xl">📂</span>
+              <h3 className="text-xl font-bold text-surface-200 mb-2">No repositories found</h3>
+              <p className="text-surface-400 max-w-sm mb-6">We couldn't find any repositories matching your criteria. Try adjusting your filters or sync your latest data from GitHub.</p>
+              <button className="btn-primary" onClick={() => { setSearch(''); setLangFilter('all'); }}>Clear Filters</button>
             </div>
           )}
         </div>

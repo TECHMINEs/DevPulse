@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
 import { getScoreColor } from '../utils/scoreUtils';
+import client from '../api/client';
 
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: '📊' },
@@ -14,9 +15,21 @@ const navItems = [
 
 const Sidebar = () => {
   const user = useStore((s) => s.user);
+  const clearAuth = useStore((s) => s.clearAuth);
   const sidebarOpen = useStore((s) => s.sidebarOpen);
   const toggleSidebar = useStore((s) => s.toggleSidebar);
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await client.post('/auth/logout');
+    } catch (_) {
+      // best-effort
+    } finally {
+      clearAuth();
+      navigate('/login');
+    }
+  };
 
   return (
     <>
@@ -95,8 +108,26 @@ const Sidebar = () => {
           )}
         </nav>
 
-        {/* Collapse toggle */}
-        <div className="p-3 border-t border-surface-800">
+        {/* Footer: shortcut hint + logout + collapse */}
+        <div className="p-3 border-t border-surface-800 space-y-1">
+          {/* Cmd+K hint */}
+          {sidebarOpen && (
+            <p className="text-[10px] text-surface-600 text-center tracking-widest uppercase mb-2 select-none">
+              ⌘K quick nav
+            </p>
+          )}
+
+          {/* Logout */}
+          <button
+            onClick={handleLogout}
+            title="Logout"
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200 ${sidebarOpen ? '' : 'justify-center'}`}
+          >
+            <span className="text-lg flex-shrink-0">🚪</span>
+            {sidebarOpen && <span className="text-sm font-medium animate-fade-in">Logout</span>}
+          </button>
+
+          {/* Collapse toggle */}
           <button
             onClick={toggleSidebar}
             className="btn-ghost w-full flex items-center justify-center gap-2"

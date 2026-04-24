@@ -35,7 +35,7 @@ router.get('/profile', authenticate, async (req, res) => {
     const userResult = await db.query(`
       SELECT u.id, u.username, u.display_name, u.email, u.avatar_url, u.bio,
              u.location, u.company, u.provider, u.is_public_profile,
-             u.weekly_digest_enabled, u.alert_threshold, u.role,
+             u.onboarding_completed, u.weekly_digest_enabled, u.alert_threshold, u.role,
              u.created_at, u.last_synced_at,
              (SELECT COUNT(*) FROM commit_snapshots WHERE user_id = u.id) as total_commits,
              (SELECT COUNT(*) FROM repositories WHERE user_id = u.id) as total_repos,
@@ -87,7 +87,7 @@ router.put('/profile', authenticate, validateProfile, async (req, res) => {
         bio = COALESCE($3, bio),
         location = COALESCE($4, location),
         company = COALESCE($5, company),
-        updated_at = NOW()
+        updated_at = CURRENT_TIMESTAMP
       WHERE id = $1
       RETURNING id, username, display_name, bio, location, company, avatar_url
     `, [req.user.id, display_name, bio, location, company]);
@@ -117,7 +117,7 @@ router.put('/settings', authenticate, validateSettings, async (req, res) => {
         alert_email = COALESCE($4, alert_email),
         is_public_profile = COALESCE($5, is_public_profile),
         slack_webhook_url = COALESCE($6, slack_webhook_url),
-        updated_at = NOW()
+        updated_at = CURRENT_TIMESTAMP
       WHERE id = $1
       RETURNING id, weekly_digest_enabled, alert_threshold, alert_email, is_public_profile, slack_webhook_url
     `, [req.user.id, weekly_digest_enabled, alert_threshold, alert_email, is_public_profile, slack_webhook_url]);
@@ -230,12 +230,56 @@ router.post('/avatar', authenticate, upload.single('avatar'), async (req, res) =
     const base64 = resizedBuffer.toString('base64');
     const avatarUrl = `data:image/webp;base64,${base64}`;
 
-    await db.query('UPDATE users SET avatar_url = $2, updated_at = NOW() WHERE id = $1', [req.user.id, avatarUrl]);
+    await db.query('UPDATE users SET avatar_url = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $1', [req.user.id, avatarUrl]);
 
     res.json({ avatar_url: avatarUrl, message: 'Avatar updated successfully' });
   } catch (error) {
     logger.error('Avatar upload error', { error: error.message });
     res.status(500).json({ error: 'Failed to upload avatar' });
+  }
+});
+
+/**
+ * @swagger
+ * /api/user/onboarding:
+ *   post:
+ *     summary: Complete user onboarding
+ *     tags: [User]
+ */
+router.post('/onboarding', authenticate, async (req, res) => {
+  try {
+    const { focus } = req.body;
+    await db.query('UPDATE users SET onboarding_completed = true, focus = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $1', [req.user.id, focus]);
+    res.json({ message: 'Onboarding completed successfully' });
+  } catch (error) {
+    logger.error('Onboarding error', { error: error.message });
+    res.status(500).json({ error: 'Failed to complete onboarding' });
+  }
+});
+
+/**
+ * @swagger
+ * /api/user/export:
+ *   get:
+ *     summary: Export user data
+ *     tags: [User]
+ */
+router.get('/export', authenticate, async (req, res) => {
+  try {
+    const userRes = await db.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
+    const wellnessRes = await db.query('SELECT * FROM wellness_scores WHERE user_id = $1', [req.user.id]);
+    const reposRes = await db.query('SELECT * FROM repositories WHERE user_id = $1', [req.user.id]);
+    const commitsRes = await db.query('SELECT * FROM commit_snapshots WHERE user_id = $1', [req.user.id]);
+    
+    res.json({
+      user: userRes.rows[0],
+      wellness: wellnessRes.rows,
+      repositories: reposRes.rows,
+      commits: commitsRes.rows,
+    });
+  } catch (error) {
+    logger.error('Export error', { error: error.message });
+    res.status(500).json({ error: 'Failed to export data' });
   }
 });
 

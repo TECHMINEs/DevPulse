@@ -18,11 +18,13 @@ CREATE TABLE IF NOT EXISTS users (
   gitlab_access_token TEXT,
   provider TEXT DEFAULT 'github',
   is_public_profile BOOLEAN DEFAULT 1,
+  onboarding_completed BOOLEAN DEFAULT 0,
   weekly_digest_enabled BOOLEAN DEFAULT 1,
   alert_threshold INTEGER DEFAULT 40,
   alert_email TEXT,
   slack_webhook_url TEXT,
   role TEXT DEFAULT 'user',
+  focus TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   last_synced_at DATETIME,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP

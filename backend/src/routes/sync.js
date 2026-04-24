@@ -4,6 +4,8 @@ const { authenticate } = require('../middleware/auth');
 const { syncQueue } = require('../queues/syncQueue');
 const logger = require('../utils/logger');
 
+const { rateLimitMiddleware, syncRateLimiter } = require('../middleware/rateLimiter');
+
 /**
  * @swagger
  * /api/sync/trigger:
@@ -13,7 +15,7 @@ const logger = require('../utils/logger');
  *     security:
  *       - bearerAuth: []
  */
-router.post('/trigger', authenticate, async (req, res) => {
+router.post('/trigger', authenticate, rateLimitMiddleware(syncRateLimiter), async (req, res) => {
   try {
     // get user's access token
     const userResult = await db.query(

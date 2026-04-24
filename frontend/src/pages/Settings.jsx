@@ -162,7 +162,24 @@ const Settings = () => {
               <button className="btn-secondary w-full text-sm text-left" onClick={() => { triggerSync(); toast.success('Re-sync started!'); }}>
                 🔄 Re-sync all data
               </button>
-              <button className="btn-secondary w-full text-sm text-left" onClick={() => toast.success('Export coming soon!')}>
+              <button className="btn-secondary w-full text-sm text-left" onClick={async () => {
+                try {
+                  const client = (await import('../api/client')).default;
+                  const res = await client.get('/api/user/export');
+                  const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `devpulse-export-${new Date().toISOString().split('T')[0]}.json`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                  toast.success('Data exported successfully!');
+                } catch (e) {
+                  toast.error('Failed to export data');
+                }
+              }}>
                 📦 Export my data as JSON
               </button>
             </div>

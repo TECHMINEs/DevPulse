@@ -34,7 +34,7 @@ const SyncProgressModal = () => {
           <div className="h-3 bg-surface-700 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-primary-500 to-purple-500 rounded-full transition-all duration-500"
-              style={{ width: `${progress}%` }}
+              style={{ width: `${Math.max(10, progress)}%` }}
             />
           </div>
         </div>

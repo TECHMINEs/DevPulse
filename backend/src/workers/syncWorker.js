@@ -4,6 +4,7 @@ const wellnessService = require('../services/wellnessService');
 const achievementService = require('../services/achievementService');
 const db = require('../db/pool');
 const logger = require('../utils/logger');
+const { getIO } = require('../socket/socketHandlers');
 
 // Register the sync worker
 // this was way more complex than I expected — handling partial failures,
@@ -16,7 +17,7 @@ syncQueue.process('sync-github', async (job) => {
   // create sync job record
   const syncJobResult = await db.query(`
     INSERT INTO sync_jobs (user_id, status, started_at)
-    VALUES ($1, 'active', NOW())
+    VALUES ($1, 'active', CURRENT_TIMESTAMP)
     RETURNING id
   `, [userId]);
   const syncJobId = syncJobResult.rows[0].id;
@@ -123,7 +124,9 @@ syncQueue.process('sync-github', async (job) => {
         reposSynced++;
 
         // update progress after each repo
-        await job.progress(Math.round((i + 1) / repos.length * 100));
+        if (typeof job.progress === 'function') {
+          await job.progress(Math.round((i + 1) / repos.length * 100));
+        }
       } catch (repoError) {
         // skip problematic repos but continue with others
         logger.warn('Failed to sync repo', {
@@ -154,11 +157,11 @@ syncQueue.process('sync-github', async (job) => {
     const newAchievements = await achievementService.checkAndAwardAchievements(userId);
 
     // 5. Update user's last_synced_at
-    await db.query('UPDATE users SET last_synced_at = NOW() WHERE id = $1', [userId]);
+    await db.query('UPDATE users SET last_synced_at = CURRENT_TIMESTAMP WHERE id = $1', [userId]);
 
     // 6. Update sync job record
     await db.query(`
-      UPDATE sync_jobs SET status = 'completed', completed_at = NOW(),
+      UPDATE sync_jobs SET status = 'completed', completed_at = CURRENT_TIMESTAMP,
         repos_synced = $2, commits_synced = $3
       WHERE id = $1
     `, [syncJobId, reposSynced, commitsSynced]);
@@ -182,7 +185,7 @@ syncQueue.process('sync-github', async (job) => {
   } catch (error) {
     // update sync job record with error
     await db.query(`
-      UPDATE sync_jobs SET status = 'failed', completed_at = NOW(),
+      UPDATE sync_jobs SET status = 'failed', completed_at = CURRENT_TIMESTAMP,
         error_message = $2, repos_synced = $3, commits_synced = $4
       WHERE id = $1
     `, [syncJobId, error.message, reposSynced, commitsSynced]);
@@ -196,9 +199,9 @@ syncQueue.process('sync-github', async (job) => {
 function emitProgress(job, data) {
   try {
     // the io instance is passed through the job data as a flag
-    // actual emission happens through the global io instance
+    // actual emission happens through the io instance
     // this is a workaround since we can't serialize Socket.io in job data
-    const io = global.__devpulse_io;
+    const io = getIO();
     if (io) {
       io.to(`user:${job.data.userId}`).emit('sync_progress', data);
     }

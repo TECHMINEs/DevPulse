@@ -9,14 +9,17 @@ import Sidebar from '../components/Sidebar';
 import BenchmarkTable from '../components/BenchmarkTable';
 import { getRadar, getBenchmark, getVelocity, getPredictions, getWellness, getStreak } from '../api/analytics';
 import { formatRadarData, formatVelocityData, formatWellnessData } from '../utils/chartHelpers';
+import SkeletonBox from '../components/SkeletonBox';
 
 const Analytics = () => {
-  const { data: radarData } = useQuery({ queryKey: ['radar'], queryFn: getRadar });
-  const { data: benchmarkData } = useQuery({ queryKey: ['benchmark'], queryFn: getBenchmark });
-  const { data: velocityData } = useQuery({ queryKey: ['velocity'], queryFn: () => getVelocity(12) });
-  const { data: predictionsData } = useQuery({ queryKey: ['predictions'], queryFn: getPredictions });
-  const { data: wellnessData } = useQuery({ queryKey: ['wellness', 90], queryFn: () => getWellness(90) });
-  const { data: streakData } = useQuery({ queryKey: ['streak'], queryFn: getStreak });
+  const { data: radarData, isLoading: radarLoading } = useQuery({ queryKey: ['radar'], queryFn: getRadar });
+  const { data: benchmarkData, isLoading: benchmarkLoading } = useQuery({ queryKey: ['benchmark'], queryFn: getBenchmark });
+  const { data: velocityData, isLoading: velocityLoading } = useQuery({ queryKey: ['velocity'], queryFn: () => getVelocity(12) });
+  const { data: predictionsData, isLoading: predictionsLoading } = useQuery({ queryKey: ['predictions'], queryFn: getPredictions });
+  const { data: wellnessData, isLoading: wellnessLoading } = useQuery({ queryKey: ['wellness', 90], queryFn: () => getWellness(90) });
+  const { data: streakData, isLoading: streakLoading } = useQuery({ queryKey: ['streak'], queryFn: getStreak });
+
+  const isLoading = radarLoading || benchmarkLoading || velocityLoading || predictionsLoading || wellnessLoading || streakLoading;
 
   const radarChart = radarData?.radar
     ? formatRadarData(radarData.radar, { consistency: 60, volume: 50, timing: 65, diversity: 40, quality: 55, wellness: 72 })
@@ -47,7 +50,18 @@ const Analytics = () => {
         </header>
 
         <div className="p-6 space-y-6 animate-fade-in">
-          {/* Radar + Benchmark */}
+          {isLoading ? (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <SkeletonBox h="380px" />
+                <SkeletonBox h="380px" />
+              </div>
+              <SkeletonBox h="300px" />
+              <SkeletonBox h="300px" />
+            </div>
+          ) : (
+            <>
+              {/* Radar + Benchmark */}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Radar Chart */}
             <div className="glass-card p-6">
@@ -134,7 +148,9 @@ const Analytics = () => {
                 <p className="text-sm text-surface-400 mt-1">Longest Streak</p>
               </div>
             </div>
-          </div>
+            </div>
+            </>
+          )}
         </div>
       </main>
     </div>

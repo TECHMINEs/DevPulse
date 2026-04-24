@@ -1,5 +1,7 @@
 import client from './client';
 
+export const getDashboardData = () => client.get('/api/analytics/dashboard').then(r => r.data);
+
 export const getWellness = (days = 90) => client.get(`/api/analytics/wellness?days=${days}`).then(r => r.data);
 export const getCommits = (days = 365) => client.get(`/api/analytics/commits?days=${days}`).then(r => r.data);
 export const getHourly = () => client.get('/api/analytics/hourly').then(r => r.data);

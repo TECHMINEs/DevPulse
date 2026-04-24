@@ -1,15 +1,18 @@
 const jwt = require('jsonwebtoken');
 const logger = require('../utils/logger');
 
+let _ioInstance = null;
+const getIO = () => _ioInstance;
+
 // Socket.io event handlers
 // this was way more complex than I expected, Socket.io room auth is tricky
 const setupSocketHandlers = (io) => {
   // make io globally available for workers
-  global.__devpulse_io = io;
+  _ioInstance = io;
 
   // JWT auth middleware for Socket.io
   io.use((socket, next) => {
-    const token = socket.handshake.auth.token || socket.handshake.query.token;
+    const token = socket.handshake.auth.token;
 
     if (!token) {
       return next(new Error('Authentication required'));
@@ -50,4 +53,4 @@ const setupSocketHandlers = (io) => {
   logger.info('Socket.io handlers initialized');
 };
 
-module.exports = { setupSocketHandlers };
+module.exports = { setupSocketHandlers, getIO };

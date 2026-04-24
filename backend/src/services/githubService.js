@@ -1,5 +1,10 @@
 const axios = require('axios');
 const logger = require('../utils/logger');
+const crypto = require('crypto');
+const { decrypt } = require('../utils/crypto');
+
+const hashToken = (token) =>
+  crypto.createHash('sha256').update(token).digest('hex').slice(0, 20);
 
 // In-Memory cache for GitHub API responses since we eliminated Redis
 const memoryCache = new Map();
@@ -29,7 +34,7 @@ const createGithubClient = (accessToken) => {
   return axios.create({
     baseURL: GITHUB_API_BASE,
     headers: {
-      Authorization: `bearer ${accessToken}`,
+      Authorization: 'Bearer ' + decrypt(accessToken),
       Accept: 'application/vnd.github.v3+json',
       'User-Agent': 'DevPulse/1.0',
     },
@@ -56,7 +61,7 @@ const cachedRequest = async (cacheKey, requestFn) => {
 // this was trickier than expected — GitHub paginates at 100 items
 const fetchUserRepos = async (accessToken) => {
   const client = createGithubClient(accessToken);
-  const cacheKey = `gh:repos:${accessToken.substring(0, 8)}`;
+  const cacheKey = `gh:repos:${hashToken(accessToken)}`;
 
   return cachedRequest(cacheKey, async () => {
     let allRepos = [];
@@ -108,7 +113,7 @@ const fetchUserRepos = async (accessToken) => {
 const fetchRepoCommits = async (accessToken, owner, repo, since = null) => {
   const client = createGithubClient(accessToken);
   const sinceDate = since || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
-  const cacheKey = `gh:commits:${accessToken.substring(0, 8)}:${owner}/${repo}:${sinceDate.substring(0, 10)}`;
+  const cacheKey = `gh:commits:${hashToken(accessToken)}:${owner}/${repo}:${sinceDate.substring(0, 10)}`;
 
   return cachedRequest(cacheKey, async () => {
     let allCommits = [];
@@ -176,7 +181,7 @@ const fetchCommitDetails = async (accessToken, owner, repo, sha) => {
 // fetch user's GitHub profile info
 const fetchUserProfile = async (accessToken) => {
   const client = createGithubClient(accessToken);
-  const cacheKey = `gh:profile:${accessToken.substring(0, 8)}`;
+  const cacheKey = `gh:profile:${hashToken(accessToken)}`;
 
   return cachedRequest(cacheKey, async () => {
     const response = await client.get('/user');
@@ -186,7 +191,7 @@ const fetchUserProfile = async (accessToken) => {
 
 // clear all cache for a user (used when force-syncing)
 const clearUserCache = async (accessToken) => {
-  const prefix = `gh:*:${accessToken.substring(0, 8)}`;
+  const prefix = 'gh:*:' + hashToken(accessToken) + '*';
   let cleared = 0;
   for (const key of memoryCache.keys()) {
     if (key.includes(prefix)) {

@@ -1,8 +1,10 @@
 import React from 'react';
+import useCountUp from '../hooks/useCountUp';
 
 const StatCard = ({ value, label, icon, trend, trendLabel, className = '' }) => {
   const isPositive = trend > 0;
   const isNeutral = trend === 0 || trend === undefined || trend === null;
+  const animatedValue = useCountUp(value ?? 0, 900);
 
   return (
     <div className={`stat-card glass-card-hover ${className}`}>
@@ -15,7 +17,9 @@ const StatCard = ({ value, label, icon, trend, trendLabel, className = '' }) => 
         )}
       </div>
       <div className="mt-4">
-        <p className="text-4xl font-black tracking-tighter text-white drop-shadow-md">{value}</p>
+        <p className="text-4xl font-black tracking-tighter text-white drop-shadow-md tabular-nums">
+          {animatedValue}
+        </p>
         <p className="text-xs uppercase tracking-widest text-surface-400 mt-2 font-bold">{label}</p>
       </div>
       {trendLabel && (

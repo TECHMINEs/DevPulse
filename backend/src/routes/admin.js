@@ -110,7 +110,7 @@ router.put('/users/:id/role', authenticate, adminOnly, async (req, res) => {
     }
 
     const result = await db.query(
-      'UPDATE users SET role = $2, updated_at = NOW() WHERE id = $1 RETURNING id, username, role',
+      'UPDATE users SET role = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING id, username, role',
       [req.params.id, role]
     );
 
