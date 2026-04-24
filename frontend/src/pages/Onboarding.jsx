@@ -52,7 +52,7 @@ const Onboarding = () => {
         </div>
 
         <p className="text-surface-400 mb-8 leading-relaxed">
-          Let's personalize your DevPulse experience. What is your primary focus for this quarter?
+          Let&apos;s personalize your DevPulse experience. What is your primary focus for this quarter?
         </p>
         
         <div className="space-y-4 mb-8">

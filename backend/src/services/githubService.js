@@ -68,7 +68,8 @@ const fetchUserRepos = async (accessToken) => {
     let page = 1;
     const perPage = 100;
 
-    while (true) {
+    let hasMore = true;
+    while (hasMore) {
       const response = await client.get('/user/repos', {
         params: {
           page,
@@ -82,7 +83,10 @@ const fetchUserRepos = async (accessToken) => {
       allRepos = allRepos.concat(response.data);
 
       // check if there are more pages
-      if (response.data.length < perPage) break;
+      if (response.data.length < perPage) {
+        hasMore = false;
+        break;
+      }
       page++;
 
       // safety limit — most users have < 50 repos
@@ -119,7 +123,8 @@ const fetchRepoCommits = async (accessToken, owner, repo, since = null) => {
     let allCommits = [];
     let page = 1;
 
-    while (true) {
+    let hasMoreCommits = true;
+    while (hasMoreCommits) {
       try {
         const response = await client.get(`/repos/${owner}/${repo}/commits`, {
           params: {
@@ -139,13 +144,20 @@ const fetchRepoCommits = async (accessToken, owner, repo, since = null) => {
 
         allCommits = allCommits.concat(commits);
 
-        if (response.data.length < 100) break;
+        if (response.data.length < 100) {
+          hasMoreCommits = false;
+          break;
+        }
         page++;
-        if (page > 20) break; // safety limit
+        if (page > 20) {
+          hasMoreCommits = false;
+          break;
+        }
       } catch (error) {
         // some repos might be empty or have restricted access
         if (error.response && error.response.status === 409) {
           logger.debug('Empty repo, skipping', { repo: `${owner}/${repo}` });
+          hasMoreCommits = false;
           break;
         }
         throw error;
