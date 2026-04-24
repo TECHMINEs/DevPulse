@@ -81,7 +81,7 @@ const Repos = () => {
             <div className="glass-card flex flex-col items-center justify-center py-20 px-4 text-center mt-8">
               <span className="text-6xl mb-4 drop-shadow-2xl">📂</span>
               <h3 className="text-xl font-bold text-surface-200 mb-2">No repositories found</h3>
-              <p className="text-surface-400 max-w-sm mb-6">We couldn't find any repositories matching your criteria. Try adjusting your filters or sync your latest data from GitHub.</p>
+              <p className="text-surface-400 max-w-sm mb-6">We couldn&apos;t find any repositories matching your criteria. Try adjusting your filters or sync your latest data from GitHub.</p>
               <button className="btn-primary" onClick={() => { setSearch(''); setLangFilter('all'); }}>Clear Filters</button>
             </div>
           )}
