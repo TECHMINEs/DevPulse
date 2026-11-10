@@ -5,7 +5,7 @@ import useStore from '../store/useStore';
 import { getMe } from '../api/auth';
 
 export const useAuth = () => {
-  const { token, user, setAuth, clearAuth } = useStore();
+  const { token, user, clearAuth } = useStore();
   const navigate = useNavigate();
 
   const { data, isLoading } = useQuery({

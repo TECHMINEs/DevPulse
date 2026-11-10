@@ -27,9 +27,11 @@ app = FastAPI(
 )
 
 # CORS — needed for direct browser calls during development
+# Comma-separated list, e.g. "http://localhost:5001,https://devpulse.example.com"
 ALLOWED_ORIGINS = [
-    os.getenv("BACKEND_URL", "http://localhost:5000"),
-    os.getenv("FRONTEND_URL", "http://localhost:5173"),
+    origin.strip()
+    for origin in os.getenv("ALLOWED_ORIGINS", "http://localhost:5001,http://localhost:5173").split(",")
+    if origin.strip()
 ]
 
 app.add_middleware(
@@ -78,11 +80,11 @@ class PredictionRequest(BaseModel):
     avg_commit_hour: float = Field(..., ge=0, le=24, description="Average commit hour (0-23)")
     night_commit_pct: float = Field(..., ge=0, le=1, description="Percentage of night commits (0-1)")
     weekend_commit_pct: float = Field(..., ge=0, le=1, description="Percentage of weekend commits (0-1)")
-    avg_message_length: float = Field(..., ge=0, le=500, description="Average commit message length")
-    lines_changed_stddev: float = Field(..., ge=0, le=5000, description="Standard deviation of lines changed")
-    commits_per_day: float = Field(..., ge=0, le=50, description="Average commits per day")
-    streak_length: int = Field(..., ge=0, le=365, description="Current streak in days")
-    files_per_commit: float = Field(..., ge=0, le=100, description="Average files per commit")
+    avg_message_length: float = Field(..., ge=0, description="Average commit message length")
+    lines_changed_stddev: float = Field(..., ge=0, description="Standard deviation of lines changed")
+    commits_per_day: float = Field(..., ge=0, description="Average commits per day")
+    streak_length: int = Field(..., ge=0, description="Current streak in days")
+    files_per_commit: float = Field(..., ge=0, description="Average files per commit")
 
     class Config:
         json_schema_extra = {

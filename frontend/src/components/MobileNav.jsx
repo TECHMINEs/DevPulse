@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import useStore from '../store/useStore';
 
 const mobileNavItems = [
   { path: '/dashboard',    label: 'Home',     icon: '📊' },
@@ -14,7 +15,9 @@ const mobileNavItems = [
  * Mirrors the most-used Sidebar routes so the app is fully usable on mobile
  * without the sidebar taking up precious viewport space.
  */
-const MobileNav = () => (
+const MobileNav = () => {
+  const toggleSidebar = useStore((s) => s.toggleSidebar);
+  return (
   <nav
     className="fixed bottom-0 left-0 right-0 z-50 lg:hidden
       bg-surface-900/95 backdrop-blur-xl border-t border-surface-800
@@ -37,7 +40,18 @@ const MobileNav = () => (
         <span className="text-[10px] font-semibold tracking-wide">{item.label}</span>
       </NavLink>
     ))}
+    {/* Opens the full sidebar drawer: Teams, Settings, Logout */}
+    <button
+      type="button"
+      onClick={toggleSidebar}
+      className="flex flex-col items-center gap-0.5 px-3 py-2 min-w-[52px] text-surface-500 hover:text-surface-300 transition-all duration-200"
+      aria-label="Open menu"
+    >
+      <span className="text-xl leading-none">☰</span>
+      <span className="text-[10px] font-semibold tracking-wide">More</span>
+    </button>
   </nav>
-);
+  );
+};
 
 export default MobileNav;

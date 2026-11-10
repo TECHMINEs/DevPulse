@@ -12,7 +12,7 @@ export const getRadar = () => client.get('/api/analytics/radar').then(r => r.dat
 export const getBenchmark = () => client.get('/api/analytics/benchmark').then(r => r.data);
 export const getPredictions = () => client.get('/api/analytics/predictions').then(r => r.data);
 
-export const getProfile = () => client.get('/api/user/profile').then(r => r.data);
+export const getProfile = () => client.get('/auth/me').then(r => r.data.user);
 export const updateProfile = (data) => client.put('/api/user/profile', data).then(r => r.data);
 export const updateSettings = (data) => client.put('/api/user/settings', data).then(r => r.data);
 export const getPublicProfile = (username) => client.get(`/api/user/${username}/public`).then(r => r.data);

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 const RepoCard = ({ repo }) => {
   const navigate = useNavigate();
-  const healthColor = repo.night_pct > 0.3 ? '#ef4444' : repo.night_pct > 0.15 ? '#f59e0b' : '#10b981';
+  const healthColor = repo.night_pct > 0.3 ? '#ef4444' : repo.night_pct > 0.15 ? '#f59e0b' : '#39FF14';
 
   return (
     <div
@@ -36,7 +36,7 @@ const RepoCard = ({ repo }) => {
       <div className="flex items-center justify-between">
         <SparkLine
           data={(repo.velocity || []).map(v => ({ count: parseInt(v.count) || parseInt(v.commits) || 0 }))}
-          color="#ff0033"
+          color="#FF0000"
           width={100}
           height={28}
         />

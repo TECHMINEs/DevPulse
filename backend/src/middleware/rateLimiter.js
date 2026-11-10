@@ -1,9 +1,9 @@
 const { RateLimiterMemory } = require('rate-limiter-flexible');
 const logger = require('../utils/logger');
 
-// using in-memory rate limiter for now
-// TODO: switch to RateLimiterRedis when Redis is always available
-// the memory one is fine for single-instance deployment
+// DevPulse runs as a single Node process on SQLite with an in-memory job queue,
+// so an in-process limiter is the correct, dependency-free choice. If the API is ever
+// scaled horizontally, swap these for RateLimiterRedis instances with the same options.
 const rateLimiter = new RateLimiterMemory({
   points: 100, // 100 requests
   duration: 60, // per 60 seconds per IP
@@ -15,6 +15,13 @@ const authRateLimiter = new RateLimiterMemory({
   points: 10,
   duration: 60,
   blockDuration: 120,
+});
+
+// CRIT-02: sync limiter — 3 triggers per 5 minutes to prevent GitHub rate limit abuse
+const syncRateLimiter = new RateLimiterMemory({
+  points: 3,
+  duration: 300,     // 5 minutes
+  blockDuration: 300,
 });
 
 const rateLimitMiddleware = (limiter = rateLimiter) => async (req, res, next) => {
@@ -31,4 +38,5 @@ const rateLimitMiddleware = (limiter = rateLimiter) => async (req, res, next) =>
   }
 };
 
-module.exports = { rateLimitMiddleware, authRateLimiter };
+module.exports = { rateLimitMiddleware, authRateLimiter, syncRateLimiter };
+

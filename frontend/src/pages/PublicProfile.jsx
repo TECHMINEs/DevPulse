@@ -84,8 +84,8 @@ const PublicProfile = () => {
               <AreaChart data={profile.wellness_history.map(w => ({ date: w.score_date, score: parseFloat(w.score) }))}>
                 <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#a1a1aa' }} tickFormatter={d => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />
                 <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#a1a1aa' }} />
-                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', fontSize: '12px' }} />
-                <Area type="monotone" dataKey="score" stroke="#ff0033" fill="#ff003333" />
+                <Tooltip contentStyle={{ backgroundColor: '#000000', border: '1px solid #FF0000', borderRadius: 0, fontSize: '12px' }} />
+                <Area type="monotone" dataKey="score" stroke="#FF0000" fill="#FF000033" />
               </AreaChart>
             </ResponsiveContainer>
           </div>

@@ -8,21 +8,19 @@ import toast from 'react-hot-toast';
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || '';
 
 // Socket.io React hook — this was tricky to get right
-// socket.io auth was broken initially, fixed handshake token
+// CRIT-13: reads memoryToken (non-persisted) instead of token to avoid
+// localStorage exposure while still authenticating the WebSocket connection.
 export const useSocket = () => {
   const socketRef = useRef(null);
-  const token = useStore((s) => s.token);
   const setSyncing = useStore((s) => s.setSyncing);
   const setSyncProgress = useStore((s) => s.setSyncProgress);
   const [isConnected, setIsConnected] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!token) return;
-
-    // connect with auth token
+    // connect using httpOnly cookie
     const socket = io(SOCKET_URL, {
-      auth: { token },
+      withCredentials: true,
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
@@ -32,7 +30,6 @@ export const useSocket = () => {
     socketRef.current = socket;
 
     socket.on('connect', () => {
-      console.log('🔌 Socket connected');
       setIsConnected(true);
       socket.emit('subscribe');
     });
@@ -55,18 +52,18 @@ export const useSocket = () => {
         { duration: 6000 }
       );
       
-      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#6366f1','#8b5cf6','#d946ef','#f59e0b','#10b981'], ticks: 250 });
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#00FFFF','#FF5F1F','#39FF14','#f59e0b','#39FF14'], ticks: 250 });
 
       if (achievement.points >= 20) {
-        setTimeout(() => confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: 0, y: 0.7 }, colors: ['#6366f1','#8b5cf6'] }), 200);
-        setTimeout(() => confetti({ particleCount: 60, angle: 120, spread: 55, origin: { x: 1, y: 0.7 }, colors: ['#d946ef','#f59e0b'] }), 350);
+        setTimeout(() => confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: 0, y: 0.7 }, colors: ['#00FFFF','#FF5F1F'] }), 200);
+        setTimeout(() => confetti({ particleCount: 60, angle: 120, spread: 55, origin: { x: 1, y: 0.7 }, colors: ['#39FF14','#f59e0b'] }), 350);
       }
 
       if (achievement.points >= 50) {
         const end = Date.now() + 2000;
         const frame = () => {
-          confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#6366f1','#d946ef'] });
-          confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#6366f1','#d946ef'] });
+          confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#00FFFF','#39FF14'] });
+          confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#00FFFF','#39FF14'] });
           if (Date.now() < end) requestAnimationFrame(frame);
         };
         setTimeout(frame, 600);
@@ -82,13 +79,13 @@ export const useSocket = () => {
       }
     });
 
-    socket.on('disconnect', (reason) => {
-      console.log('🔌 Socket disconnected:', reason);
+    socket.on('disconnect', () => {
       setIsConnected(false);
     });
 
-    socket.on('connect_error', (error) => {
-      console.warn('Socket connection error:', error.message);
+    // Reconnection is automatic; surface the state through isConnected instead of the console
+    socket.on('connect_error', () => {
+      setIsConnected(false);
     });
 
     return () => {
@@ -96,7 +93,7 @@ export const useSocket = () => {
       socketRef.current = null;
       setIsConnected(false);
     };
-  }, [token, setSyncing, setSyncProgress]);
+  }, [setSyncing, setSyncProgress, queryClient]);
 
   const emit = useCallback((event, data) => {
     if (socketRef.current?.connected) {

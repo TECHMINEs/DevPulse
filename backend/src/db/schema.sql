@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS users (
   slack_webhook_url TEXT,
   role TEXT DEFAULT 'user',
   focus TEXT,
+  token_version INTEGER DEFAULT 1,        -- CRIT-01: JWT revocation counter
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   last_synced_at DATETIME,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -51,6 +52,17 @@ CREATE TABLE IF NOT EXISTS team_members (
   UNIQUE(team_id, user_id)
 );
 
+-- FEAT-03: Team invite tokens — stored so join can verify and mark used
+CREATE TABLE IF NOT EXISTS team_invite_tokens (
+  id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+  team_id TEXT REFERENCES teams(id) ON DELETE CASCADE,
+  token TEXT UNIQUE NOT NULL,
+  created_by TEXT REFERENCES users(id),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  expires_at DATETIME DEFAULT (datetime('now', '+7 days')),
+  used INTEGER DEFAULT 0
+);
+
 -- ============================================================================
 -- REPOSITORIES
 -- ============================================================================
@@ -68,6 +80,7 @@ CREATE TABLE IF NOT EXISTS repositories (
   forks INTEGER DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   last_commit_at DATETIME,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,  -- FEAT-08
   UNIQUE(user_id, repo_external_id)
 );
 
@@ -146,7 +159,8 @@ CREATE TABLE IF NOT EXISTS goals (
   start_date DATE NOT NULL,
   end_date DATE NOT NULL,
   is_completed BOOLEAN DEFAULT 0,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP   -- FEAT-08
 );
 
 -- ============================================================================
@@ -179,7 +193,7 @@ CREATE TABLE IF NOT EXISTS sync_jobs (
 );
 
 -- ============================================================================
--- INDEXES
+-- INDEXES — original set
 -- ============================================================================
 CREATE INDEX IF NOT EXISTS idx_commit_snapshots_user_date ON commit_snapshots(user_id, committed_at);
 CREATE INDEX IF NOT EXISTS idx_commit_snapshots_repo ON commit_snapshots(repo_id);
@@ -190,6 +204,53 @@ CREATE INDEX IF NOT EXISTS idx_team_members_user ON team_members(user_id);
 CREATE INDEX IF NOT EXISTS idx_team_members_team ON team_members(team_id);
 CREATE INDEX IF NOT EXISTS idx_user_achievements_user ON user_achievements(user_id);
 CREATE INDEX IF NOT EXISTS idx_goals_user ON goals(user_id);
+
+-- FEAT-09: Missing performance indexes
+CREATE INDEX IF NOT EXISTS idx_commit_snapshots_hour
+  ON commit_snapshots(user_id, hour_of_day);
+
+CREATE INDEX IF NOT EXISTS idx_commit_snapshots_weekend
+  ON commit_snapshots(user_id, is_weekend);
+
+CREATE INDEX IF NOT EXISTS idx_wellness_scores_risk
+  ON wellness_scores(user_id, risk_flag, score_date);
+
+CREATE INDEX IF NOT EXISTS idx_wellness_scores_user_date_score
+  ON wellness_scores(user_id, score_date, score);
+
+CREATE INDEX IF NOT EXISTS idx_users_username
+  ON users(username);
+
+CREATE INDEX IF NOT EXISTS idx_team_members_team_user
+  ON team_members(team_id, user_id);
+
+-- FEAT-06: Prevent duplicate weekly digests
+CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_user_week
+  ON weekly_digests(user_id, week_start);
+
+-- ============================================================================
+-- TRIGGERS — FEAT-08: auto-update updated_at
+-- ============================================================================
+CREATE TRIGGER IF NOT EXISTS update_users_updated_at
+  AFTER UPDATE ON users
+  FOR EACH ROW
+  BEGIN
+    UPDATE users SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+  END;
+
+CREATE TRIGGER IF NOT EXISTS update_repositories_updated_at
+  AFTER UPDATE ON repositories
+  FOR EACH ROW
+  BEGIN
+    UPDATE repositories SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+  END;
+
+CREATE TRIGGER IF NOT EXISTS update_goals_updated_at
+  AFTER UPDATE ON goals
+  FOR EACH ROW
+  BEGIN
+    UPDATE goals SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+  END;
 
 -- ============================================================================
 -- SEED ACHIEVEMENTS

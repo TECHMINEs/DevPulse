@@ -31,7 +31,7 @@ const RepoDetail = () => {
     <div className="flex min-h-screen bg-surface-950">
       <Sidebar />
       <main className="flex-1 overflow-y-auto">
-        <header className="sticky top-0 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-surface-800 px-6 py-4">
+        <header className="sticky top-11 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-surface-800 px-6 py-4">
           <h1 className="text-xl font-bold">{repo?.name || 'Repository'}</h1>
           <p className="text-xs text-surface-500">{repo?.full_name}</p>
         </header>
@@ -75,15 +75,15 @@ const RepoDetail = () => {
               <AreaChart data={timeline || []} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
                 <defs>
                   <linearGradient id="timelineGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#ff0033" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="#ff0033" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#FF0000" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#FF0000" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#000000" />
                 <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#a1a1aa' }} tickFormatter={(d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} interval="preserveStartEnd" />
                 <YAxis tick={{ fontSize: 10, fill: '#a1a1aa' }} />
-                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', fontSize: '12px' }} />
-                <Area type="monotone" dataKey="count" stroke="#ff0033" fill="url(#timelineGrad)" dot={false} />
+                <Tooltip contentStyle={{ backgroundColor: '#000000', border: '1px solid #FF0000', borderRadius: 0, fontSize: '12px' }} />
+                <Area type="monotone" dataKey="count" stroke="#FF0000" fill="url(#timelineGrad)" dot={false} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -93,13 +93,13 @@ const RepoDetail = () => {
             <h2 className="text-sm font-semibold text-surface-300 mb-4">Most Active Hours</h2>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={hourlyFull} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#000000" />
                 <XAxis dataKey="label" tick={{ fontSize: 9, fill: '#a1a1aa' }} interval={2} />
                 <YAxis tick={{ fontSize: 10, fill: '#a1a1aa' }} />
-                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', fontSize: '12px' }} />
-                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                <Tooltip contentStyle={{ backgroundColor: '#000000', border: '1px solid #FF0000', borderRadius: 0, fontSize: '12px' }} />
+                <Bar dataKey="count" radius={0}>
                   {hourlyFull.map((_, i) => (
-                    <Cell key={i} fill={i >= 0 && i < 5 ? '#ef4444' : '#ff0033'} />
+                    <Cell key={i} fill={i >= 0 && i < 5 ? '#ef4444' : '#FF0000'} />
                   ))}
                 </Bar>
               </BarChart>

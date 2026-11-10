@@ -12,7 +12,16 @@ module.exports = function(passport) {
 
   passport.deserializeUser(async (id, done) => {
     try {
-      const result = await db.query('SELECT * FROM users WHERE id = $1', [id]);
+      // CRIT-10: never load access_token into req.user — use explicit columns
+      const result = await db.query(
+        `SELECT id, github_id, gitlab_id, username, display_name, email,
+          avatar_url, bio, location, company, provider, role, focus,
+          is_public_profile, onboarding_completed, weekly_digest_enabled,
+          alert_threshold, alert_email, slack_webhook_url,
+          token_version, created_at, last_synced_at, updated_at
+        FROM users WHERE id = $1`,
+        [id]
+      );
       done(null, result.rows[0] || null);
     } catch (error) {
       done(error, null);

@@ -1,50 +1,50 @@
 import React from 'react';
 
-const BenchmarkTable = ({ user, industry }) => {
-  const metrics = [
-    { key: 'commits_per_week', label: 'Commits / Week', format: (v) => Math.round(v) },
-    { key: 'avg_commit_message_length', label: 'Avg Message Length', format: (v) => `${Math.round(v)} chars` },
-    { key: 'night_commit_pct', label: 'Night Commits', format: (v) => `${(v * 100).toFixed(1)}%`, reverse: true },
-    { key: 'weekend_commit_pct', label: 'Weekend Commits', format: (v) => `${(v * 100).toFixed(1)}%`, reverse: true },
-    { key: 'repos_active', label: 'Active Repos', format: (v) => Math.round(v) },
-    { key: 'avg_wellness_score', label: 'Wellness Score', format: (v) => v?.toFixed(1) || '0' },
-    { key: 'avg_streak', label: 'Best Streak', format: (v) => `${v} days` },
-    { key: 'languages_used', label: 'Languages', format: (v) => v },
-  ];
-
+const BenchmarkTable = ({ data = [], currentUser = null }) => {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full">
+      <table className="w-full text-left border-separate border-spacing-y-2">
         <thead>
-          <tr className="border-b border-surface-700">
-            <th className="text-left text-xs text-surface-400 font-medium py-3 px-4">Metric</th>
-            <th className="text-center text-xs text-primary-400 font-medium py-3 px-4">You</th>
-            <th className="text-center text-xs text-surface-400 font-medium py-3 px-4">Industry Avg</th>
-            <th className="text-center text-xs text-surface-400 font-medium py-3 px-4">Status</th>
+          <tr className="text-surface-500 text-[10px] uppercase tracking-widest">
+            <th className="px-4 py-2">Rank</th>
+            <th className="px-4 py-2">Developer</th>
+            <th className="px-4 py-2 text-right">Avg Score</th>
+            <th className="px-4 py-2 text-right">Commits</th>
           </tr>
         </thead>
         <tbody>
-          {metrics.map((metric) => {
-            const userVal = user?.[metric.key] || 0;
-            const indVal = industry?.[metric.key] || 0;
-            const isBetter = metric.reverse
-              ? userVal < indVal
-              : userVal > indVal;
-            const isEqual = Math.abs(userVal - indVal) / Math.max(indVal, 1) < 0.1;
-
+          {data.map((row, i) => {
+            const isMe = currentUser && row.username === currentUser.username;
             return (
-              <tr key={metric.key} className="border-b border-surface-800 hover:bg-surface-800/50 transition-colors">
-                <td className="py-3 px-4 text-sm text-surface-300">{metric.label}</td>
-                <td className="py-3 px-4 text-center text-sm font-medium">{metric.format(userVal)}</td>
-                <td className="py-3 px-4 text-center text-sm text-surface-400">{metric.format(indVal)}</td>
-                <td className="py-3 px-4 text-center">
-                  {isEqual ? (
-                    <span className="badge badge-info">≈ On par</span>
-                  ) : isBetter ? (
-                    <span className="badge badge-success">↑ Above</span>
-                  ) : (
-                    <span className="badge badge-warning">↓ Below</span>
-                  )}
+              <tr 
+                key={row.username || i}
+                className={`group transition-all duration-300 ${isMe ? 'bg-primary-500/10' : 'hover:bg-white/5'}`}
+              >
+                <td className="px-4 py-3 rounded-l-xl text-sm font-mono text-surface-400">
+                  #{i + 1}
+                </td>
+                <td className="px-4 py-3 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-surface-800 border border-white/10 overflow-hidden">
+                    {row.avatar_url ? (
+                      <img src={row.avatar_url} alt={row.username} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-xs">👤</div>
+                    )}
+                  </div>
+                  <div>
+                    <p className={`text-sm font-semibold ${isMe ? 'text-primary-400' : 'text-surface-200'}`}>
+                      {row.display_name || row.username}
+                    </p>
+                    {isMe && <span className="text-[10px] bg-primary-500 text-white px-1.5 rounded">YOU</span>}
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <span className={`text-sm font-bold ${parseFloat(row.avg_score) >= 70 ? 'text-emerald-400' : parseFloat(row.avg_score) >= 40 ? 'text-amber-400' : 'text-red-400'}`}>
+                    {row.avg_score}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-right rounded-r-xl font-mono text-xs text-surface-500">
+                  {row.commits_count || 0}
                 </td>
               </tr>
             );

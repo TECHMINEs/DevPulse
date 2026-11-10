@@ -1,6 +1,6 @@
 import React from 'react';
 
-const GoalCard = ({ goal, onUpdate, onDelete }) => {
+const GoalCard = ({ goal, onDelete }) => {
   const progress = goal.target_value > 0 ? (goal.current_value / goal.target_value * 100) : 0;
   const daysLeft = Math.max(0, Math.ceil((new Date(goal.end_date) - new Date()) / (1000 * 60 * 60 * 24)));
   const isOverdue = daysLeft === 0 && !goal.is_completed;

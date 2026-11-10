@@ -17,20 +17,35 @@ const { rateLimitMiddleware, syncRateLimiter } = require('../middleware/rateLimi
  */
 router.post('/trigger', authenticate, rateLimitMiddleware(syncRateLimiter), async (req, res) => {
   try {
-    // get user's access token
-    const userResult = await db.query(
-      'SELECT access_token FROM users WHERE id = $1',
+    // SEC-03: enforce 10-minute cooldown per user regardless of rate limiter
+    const lastSyncResult = await db.query(
+      'SELECT last_synced_at FROM users WHERE id = $1',
       [req.user.id]
     );
+    const lastSynced = lastSyncResult.rows[0]?.last_synced_at;
+    if (lastSynced) {
+      const minutesSince = (Date.now() - new Date(lastSynced).getTime()) / 60000;
+      if (minutesSince < 10) {
+        const waitMins = Math.ceil(10 - minutesSince);
+        return res.status(429).json({
+          error: `Please wait ${waitMins} more minute(s) before syncing again.`,
+          retryAfter: waitMins * 60,
+        });
+      }
+    }
 
-    if (!userResult.rows[0]?.access_token) {
+    // SEC-05: verify the access token exists (don't pass it in job data)
+    const tokenCheck = await db.query(
+      'SELECT id FROM users WHERE id = $1 AND access_token IS NOT NULL',
+      [req.user.id]
+    );
+    if (!tokenCheck.rows[0]) {
       return res.status(400).json({ error: 'No access token found. Please re-authenticate.' });
     }
 
-    // add job to Bull queue
+    // SEC-05: only userId in job data — worker fetches access_token itself
     const job = await syncQueue.add('sync-github', {
       userId: req.user.id,
-      accessToken: userResult.rows[0].access_token,
     }, {
       jobId: `sync-${req.user.id}-${Date.now()}`,
       attempts: 3,

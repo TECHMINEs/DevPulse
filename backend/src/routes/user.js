@@ -1,25 +1,8 @@
 const router = require('express').Router();
-const multer = require('multer');
-const sharp = require('sharp');
-const path = require('path');
 const db = require('../db/pool');
 const { authenticate } = require('../middleware/auth');
 const { validateProfile, validateSettings } = require('../middleware/validate');
 const logger = require('../utils/logger');
-
-// multer setup for avatar upload
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-  fileFilter: (req, file, cb) => {
-    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    if (allowed.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only JPEG, PNG, WebP, and GIF images are allowed'));
-    }
-  },
-});
 
 /**
  * @swagger
@@ -209,38 +192,6 @@ router.get('/:username/public', async (req, res) => {
 
 /**
  * @swagger
- * /api/user/avatar:
- *   post:
- *     summary: Upload user avatar
- *     tags: [User]
- */
-router.post('/avatar', authenticate, upload.single('avatar'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
-
-    // resize to 200x200 with sharp
-    const resizedBuffer = await sharp(req.file.buffer)
-      .resize(200, 200, { fit: 'cover' })
-      .webp({ quality: 80 })
-      .toBuffer();
-
-    // convert to base64 data URL (for simplicity — in production use S3/Cloudinary)
-    const base64 = resizedBuffer.toString('base64');
-    const avatarUrl = `data:image/webp;base64,${base64}`;
-
-    await db.query('UPDATE users SET avatar_url = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $1', [req.user.id, avatarUrl]);
-
-    res.json({ avatar_url: avatarUrl, message: 'Avatar updated successfully' });
-  } catch (error) {
-    logger.error('Avatar upload error', { error: error.message });
-    res.status(500).json({ error: 'Failed to upload avatar' });
-  }
-});
-
-/**
- * @swagger
  * /api/user/onboarding:
  *   post:
  *     summary: Complete user onboarding
@@ -266,7 +217,13 @@ router.post('/onboarding', authenticate, async (req, res) => {
  */
 router.get('/export', authenticate, async (req, res) => {
   try {
-    const userRes = await db.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
+    // Explicit column list: OAuth tokens and webhook secrets must never leave the server
+    const userRes = await db.query(`
+      SELECT id, username, display_name, email, avatar_url, bio, location, company, provider,
+             is_public_profile, onboarding_completed, weekly_digest_enabled, alert_threshold,
+             alert_email, role, focus, created_at, last_synced_at, updated_at
+      FROM users WHERE id = $1
+    `, [req.user.id]);
     const wellnessRes = await db.query('SELECT * FROM wellness_scores WHERE user_id = $1', [req.user.id]);
     const reposRes = await db.query('SELECT * FROM repositories WHERE user_id = $1', [req.user.id]);
     const commitsRes = await db.query('SELECT * FROM commit_snapshots WHERE user_id = $1', [req.user.id]);

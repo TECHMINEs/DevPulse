@@ -4,6 +4,7 @@ import Sidebar from '../components/Sidebar';
 import AchievementCard from '../components/AchievementCard';
 import { getAchievements } from '../api/analytics';
 import SkeletonBox from '../components/SkeletonBox';
+import EmptyState from '../components/EmptyState';
 
 const categories = ['All', 'onboarding', 'pattern', 'streak', 'wellness', 'volume', 'diversity', 'social'];
 
@@ -24,7 +25,7 @@ const Achievements = () => {
     <div className="flex min-h-screen bg-surface-950">
       <Sidebar />
       <main className="flex-1 overflow-y-auto">
-        <header className="sticky top-0 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-surface-800 px-6 py-4">
+        <header className="sticky top-11 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-surface-800 px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl font-bold">Achievements</h1>
@@ -72,11 +73,13 @@ const Achievements = () => {
           </div>
 
           {filtered.length === 0 && (
-            <div className="glass-card flex flex-col items-center justify-center py-20 px-4 text-center mt-8">
-              <span className="text-6xl mb-4 drop-shadow-2xl">🔒</span>
-              <h3 className="text-xl font-bold text-surface-200 mb-2">No achievements found</h3>
-              <p className="text-surface-400 max-w-sm mb-6">You haven&apos;t unlocked any achievements in this category yet. Keep coding and pushing to earn them!</p>
-              <button className="btn-primary" onClick={() => setActiveTab('All')}>View All Categories</button>
+            <div className="mt-8">
+              <EmptyState 
+                title="No achievements found"
+                description={`You haven't unlocked any achievements in the ${activeTab.toLowerCase()} category yet. Keep coding and pushing to earn them!`}
+                actionLabel="View All Categories"
+                onAction={() => setActiveTab('All')}
+              />
             </div>
           )}
           </>

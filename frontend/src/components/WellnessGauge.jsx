@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { getScoreColor, getScoreLabel } from '../utils/scoreUtils';
+import { getScoreLabel } from '../utils/scoreUtils';
 
 const WellnessGauge = ({ score = 0, size = 200, showLabel = true }) => {
   const canvasRef = useRef(null);
@@ -40,17 +40,29 @@ const WellnessGauge = ({ score = 0, size = 200, showLabel = true }) => {
       // background arc
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-      ctx.strokeStyle = '#1e293b';
+      ctx.strokeStyle = '#000000'; // surface-800
       ctx.lineWidth = lineWidth;
       ctx.lineCap = 'round';
       ctx.stroke();
 
-      // score arc
+      // Determine colors based on score
       const scoreAngle = startAngle + (endAngle - startAngle) * (animatedScore.current / 100);
       const gradient = ctx.createLinearGradient(0, size, size, 0);
-      const color = getScoreColor(animatedScore.current);
-      gradient.addColorStop(0, color + '80');
-      gradient.addColorStop(1, color);
+
+      let color1, color2;
+      if (animatedScore.current >= 70) {
+        color1 = '#39FF14'; // Emerald 500
+        color2 = '#34d399'; // Emerald 400
+      } else if (animatedScore.current >= 40) {
+        color1 = '#f59e0b'; // Amber 500
+        color2 = '#fbbf24'; // Amber 400
+      } else {
+        color1 = '#FF0000'; // Neon Red
+        color2 = '#ff4d71'; // Lighter Neon Red
+      }
+
+      gradient.addColorStop(0, color1);
+      gradient.addColorStop(1, color2);
 
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius, startAngle, scoreAngle);
@@ -59,16 +71,16 @@ const WellnessGauge = ({ score = 0, size = 200, showLabel = true }) => {
       ctx.lineCap = 'round';
       ctx.stroke();
 
-      // glow effect
+      // premium cyber glow effect
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius, startAngle, scoreAngle);
-      ctx.strokeStyle = color + '30';
-      ctx.lineWidth = lineWidth + 8;
+      ctx.strokeStyle = color1 + '40';
+      ctx.lineWidth = lineWidth + 12;
       ctx.lineCap = 'round';
       ctx.stroke();
 
       // score text
-      ctx.fillStyle = '#f1f5f9';
+      ctx.fillStyle = '#FFFFFF';
       ctx.font = `bold ${size * 0.18}px Inter, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -76,7 +88,7 @@ const WellnessGauge = ({ score = 0, size = 200, showLabel = true }) => {
 
       // label text
       if (showLabel) {
-        ctx.fillStyle = '#94a3b8';
+        ctx.fillStyle = '#A3A3A3';
         ctx.font = `500 ${size * 0.07}px Inter, sans-serif`;
         ctx.fillText(getScoreLabel(animatedScore.current), centerX, centerY + size * 0.12);
       }

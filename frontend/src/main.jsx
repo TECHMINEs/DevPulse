@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
+import CommandPalette from './components/CommandPalette';
+import NavigationProgress from './components/NavigationProgress';
 import './index.css';
 
 const queryClient = new QueryClient({
@@ -22,23 +24,26 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <ErrorBoundary>
+          <NavigationProgress />
           <App />
+          <CommandPalette />
         </ErrorBoundary>
         <Toaster
           position="top-right"
           toastOptions={{
             duration: 4000,
             style: {
-              background: '#1e293b',
-              color: '#f1f5f9',
-              border: '1px solid #334155',
-              borderRadius: '12px',
+              background: '#000000',
+              color: '#FFFFFF',
+              border: '1px solid rgba(255,0,51,0.2)',
+              borderRadius: 0,
+              backdropFilter: 'blur(12px)',
             },
             success: {
-              iconTheme: { primary: '#10b981', secondary: '#f1f5f9' },
+              iconTheme: { primary: '#FF0000', secondary: '#FFFFFF' },
             },
             error: {
-              iconTheme: { primary: '#ef4444', secondary: '#f1f5f9' },
+              iconTheme: { primary: '#ef4444', secondary: '#FFFFFF' },
             },
           }}
         />

@@ -3,33 +3,63 @@ export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
   darkMode: 'class',
   theme: {
+    borderRadius: {
+      none: '0px',
+      sm: '0px',
+      DEFAULT: '0px',
+      md: '0px',
+      lg: '0px',
+      xl: '0px',
+      '2xl': '0px',
+      '3xl': '0px',
+      full: '0px',
+    },
     extend: {
       colors: {
         primary: {
-          50: '#fff0f2',
-          100: '#ffe0e5',
-          200: '#ffc2cc',
-          300: '#ff94a4',
-          400: '#ff5c73',
-          500: '#ff0033', // Neon Red
-          600: '#e60029',
-          700: '#bf001f',
-          800: '#990016',
-          900: '#73000d',
-          950: '#400005',
+          50: '#fff1f2',
+          100: '#ffe4e6',
+          200: '#fecdd3',
+          300: '#fda4af',
+          400: '#fb7185',
+          500: '#FF0000', // Brightest Red Accent
+          600: '#DC2626',
+          700: '#B91C1C',
+          800: '#991B1B',
+          900: '#7F1D1D',
+          950: '#450A0A',
+        },
+        secondary: {
+          50: '#fff7ed',
+          100: '#ffedd5',
+          200: '#fed7aa',
+          300: '#fdba74',
+          400: '#fb923c',
+          500: '#FF5F1F', // Cyber Orange
+          600: '#EA580C',
+          700: '#C2410C',
+          800: '#9A3412',
+          900: '#7C2D12',
+          950: '#431407',
+        },
+        cyber: {
+          cyan: '#00FFFF',
+          green: '#39FF14',
+          orange: '#FF5F1F',
+          red: '#FF0000',
         },
         surface: {
-          50: '#fafafa',
-          100: '#f4f4f5',
-          200: '#e4e4e7',
-          300: '#d4d4d8',
-          400: '#a1a1aa',
-          500: '#71717a',
-          600: '#52525b',
-          700: '#3f3f46',
-          800: '#27272a',
-          900: '#18181b', // Very dark grey
-          950: '#000000', // Pitch Black
+          50: '#f8fafc',
+          100: '#f1f5f9',
+          200: '#e2e8f0',
+          300: '#cbd5e1',
+          400: '#94a3b8',
+          500: '#64748b',
+          600: '#475569',
+          700: '#1a1a1a',
+          800: '#0d0d0d',
+          900: '#050505',
+          950: '#000000', // Deepest void black
         },
       },
       fontFamily: {
@@ -42,7 +72,6 @@ export default {
         'slide-in-right': 'slideInRight 0.3s ease-out',
         'pulse-slow': 'pulse 3s infinite',
         'glow': 'glow 2s ease-in-out infinite alternate',
-        'code-rain': 'codeRain 8s linear infinite',
       },
       keyframes: {
         fadeIn: {
@@ -58,12 +87,8 @@ export default {
           '100%': { opacity: '1', transform: 'translateX(0)' },
         },
         glow: {
-          '0%': { boxShadow: '0 0 20px rgba(255, 0, 51, 0.3)' },
-          '100%': { boxShadow: '0 0 40px rgba(255, 0, 51, 0.6)' },
-        },
-        codeRain: {
-          '0%': { transform: 'translateY(-100%)' },
-          '100%': { transform: 'translateY(100vh)' },
+          '0%': { boxShadow: '0 0 15px rgba(255, 0, 0, 0.4)' },
+          '100%': { boxShadow: '0 0 30px rgba(255, 0, 0, 0.8)' },
         },
       },
     },

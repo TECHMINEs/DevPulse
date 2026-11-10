@@ -55,8 +55,15 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net"],
-      imgSrc: ["'self'", "data:", "https://avatars.githubusercontent.com", "https://raw.githubusercontent.com"],
-      connectSrc: ["'self'", "https://api.github.com", process.env.ML_SERVICE_URL || "http://localhost:8000"],
+      imgSrc: ["'self'", "data:", "https://avatars.githubusercontent.com", "https://api.dicebear.com"],
+      connectSrc: [
+        "'self'", 
+        process.env.FRONTEND_URL || "http://localhost:5173", 
+        "https://api.github.com", 
+        process.env.ML_SERVICE_URL || "http://localhost:8000", 
+        "ws:", 
+        "wss:"
+      ],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
     },
   },
@@ -113,9 +120,23 @@ app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customSiteTitle: 'DevPulse API Documentation',
 }));
 
-// health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', uptime: process.uptime(), timestamp: new Date().toISOString() });
+// FEAT-05: health check — verifies DB connectivity, returns 503 if unhealthy
+app.get('/health', async (req, res) => {
+  const checks = { database: 'ok' };
+  let healthy = true;
+  try {
+    const { query } = require('./db/pool');
+    await query('SELECT 1');
+  } catch (e) {
+    checks.database = `error: ${e.message}`;
+    healthy = false;
+  }
+  res.status(healthy ? 200 : 503).json({
+    status: healthy ? 'ok' : 'degraded',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    checks,
+  });
 });
 
 // ============================================================================
@@ -128,8 +149,9 @@ setupSocketHandlers(io);
 // ============================================================================
 require('./workers/syncWorker');
 
-// Weekly digest — every Monday at 8am
-// TODO: make this timezone-aware per user, for now it runs in server timezone
+// Weekly digest — every Monday at 08:00 in DIGEST_TIMEZONE (IANA name, default UTC).
+// Pinning the zone keeps delivery time stable regardless of where the server is hosted.
+const DIGEST_TIMEZONE = process.env.DIGEST_TIMEZONE || 'UTC';
 cron.schedule('0 8 * * 1', async () => {
   logger.info('Running weekly digest job...');
   try {
@@ -139,7 +161,7 @@ cron.schedule('0 8 * * 1', async () => {
   } catch (error) {
     logger.error('Failed to queue weekly digest job', { error: error.message });
   }
-});
+}, { timezone: DIGEST_TIMEZONE });
 
 // ============================================================================
 // ERROR HANDLING
@@ -150,7 +172,7 @@ app.use((req, res) => {
 });
 
 // global error handler — catches everything unhandled
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
   logger.error('Unhandled error', {
     error: err.message,
     stack: err.stack,
@@ -170,7 +192,7 @@ app.use((err, req, res, next) => {
 // ============================================================================
 // START SERVER
 // ============================================================================
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 const { initDB } = require('./db/pool');
 const fs = require('fs');
 const path = require('path');
@@ -195,16 +217,22 @@ const startServer = async () => {
 
 startServer();
 
-// graceful shutdown
-process.on('SIGTERM', () => {
-  logger.info('SIGTERM received, shutting down gracefully...');
+// QUAL-10: graceful shutdown — wait for in-flight sync jobs before closing
+process.on('SIGTERM', async () => {
+  logger.info('SIGTERM received, draining queue...');
+  try {
+    const { syncQueue } = require('./queues/syncQueue');
+    await syncQueue.waitForIdle();
+  } catch (e) {
+    logger.warn('Queue drain failed', { error: e.message });
+  }
   server.close(() => {
     logger.info('Server closed');
     process.exit(0);
   });
 });
 
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', (reason) => {
   logger.error('Unhandled Rejection', { reason: reason?.message || reason });
 });
 

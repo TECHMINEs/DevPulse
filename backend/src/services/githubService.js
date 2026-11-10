@@ -9,10 +9,16 @@ const hashToken = (token) =>
 // In-Memory cache for GitHub API responses since we eliminated Redis
 const memoryCache = new Map();
 
-const CACHE_TTL = 900; // 15 minutes in seconds
+const CACHE_TTL = 900;     // 15 minutes in seconds
+const MAX_CACHE_SIZE = 2000; // CRIT-17: prevent unbounded growth
 
 // Helper to set cache with expiration
 const setCache = (key, value, ttlSeconds) => {
+  // CRIT-17: evict oldest entry if at capacity
+  if (memoryCache.size >= MAX_CACHE_SIZE) {
+    const oldestKey = memoryCache.keys().next().value;
+    memoryCache.delete(oldestKey);
+  }
   const expiresAt = Date.now() + (ttlSeconds * 1000);
   memoryCache.set(key, { value, expiresAt });
 };
@@ -27,6 +33,14 @@ const getCache = (key) => {
   }
   return item.value;
 };
+
+// CRIT-17: periodic cache pruning every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of memoryCache) {
+    if (now > v.expiresAt) memoryCache.delete(k);
+  }
+}, 5 * 60 * 1000).unref(); // .unref() so this doesn't prevent process exit
 const GITHUB_API_BASE = 'https://api.github.com';
 
 // helper to build axios instance with auth
@@ -89,8 +103,7 @@ const fetchUserRepos = async (accessToken) => {
       }
       page++;
 
-      // safety limit — most users have < 50 repos
-      // TODO: add pagination here, works for now since most users have < 50 repos
+      // Paginated at 100/page; stop after 10 pages (1,000 repos) to bound sync time and API quota
       if (page > 10) {
         logger.warn('Repo fetch hit safety limit of 1000 repos');
         break;
@@ -203,10 +216,10 @@ const fetchUserProfile = async (accessToken) => {
 
 // clear all cache for a user (used when force-syncing)
 const clearUserCache = async (accessToken) => {
-  const prefix = 'gh:*:' + hashToken(accessToken) + '*';
+  const userHash = hashToken(accessToken);
   let cleared = 0;
   for (const key of memoryCache.keys()) {
-    if (key.includes(prefix)) {
+    if (key.includes(userHash)) { // BUG-12: fixed cache key collision
       memoryCache.delete(key);
       cleared++;
     }

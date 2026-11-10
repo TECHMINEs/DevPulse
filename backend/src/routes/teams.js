@@ -105,7 +105,7 @@ router.get('/:slug', authenticate, async (req, res) => {
       SELECT ws.score_date, AVG(ws.score) as avg_score
       FROM wellness_scores ws
       JOIN team_members tm ON ws.user_id = tm.user_id
-      WHERE tm.team_id = $1 AND ws.score_date >= CURRENT_DATE - 30
+      WHERE tm.team_id = $1 AND ws.score_date >= date('now', '-30 days')
       GROUP BY ws.score_date
       ORDER BY ws.score_date ASC
     `, [team.id]);
@@ -181,10 +181,14 @@ router.post('/:slug/join', authenticate, async (req, res) => {
       return res.status(400).json({ error: 'Already a member of this team' });
     }
 
-    await db.query(`
+    const insertResult = await db.query(`
       INSERT INTO team_members (team_id, user_id, role)
       VALUES ($1, $2, 'member')
     `, [teamResult.rows[0].id, req.user.id]);
+
+    if (insertResult.rowCount === 0) { // BUG-09: add guard
+      return res.status(500).json({ error: 'Failed to join team' });
+    }
 
     res.json({ message: 'Successfully joined team' });
   } catch (error) {
@@ -210,10 +214,14 @@ router.delete('/:slug/leave', authenticate, async (req, res) => {
       return res.status(400).json({ error: 'Team owner cannot leave. Transfer ownership first.' });
     }
 
-    await db.query(
+    const deleteResult = await db.query(
       'DELETE FROM team_members WHERE team_id = $1 AND user_id = $2',
       [teamResult.rows[0].id, req.user.id]
     );
+
+    if (deleteResult.rowCount === 0) { // BUG-10: add guard
+      return res.status(404).json({ error: 'You are not a member of this team' });
+    }
 
     res.json({ message: 'Left team successfully' });
   } catch (error) {
@@ -243,7 +251,7 @@ router.get('/:slug/leaderboard', authenticate, async (req, res) => {
         COUNT(DISTINCT ws.score_date) as days_tracked
       FROM team_members tm
       JOIN users u ON tm.user_id = u.id
-      LEFT JOIN wellness_scores ws ON ws.user_id = u.id AND ws.score_date >= CURRENT_DATE - 30
+      LEFT JOIN wellness_scores ws ON ws.user_id = u.id AND ws.score_date >= date('now', '-30 days')
       WHERE tm.team_id = $1
       GROUP BY u.id, u.username, u.display_name, u.avatar_url
       ORDER BY avg_score DESC NULLS LAST
@@ -286,7 +294,7 @@ router.get('/:slug/insights', authenticate, async (req, res) => {
         COUNT(DISTINCT CASE WHEN ws.risk_flag = 'high' THEN ws.user_id END) as at_risk_count,
         SUM(ws.commits_count) as total_commits
       FROM team_members tm
-      LEFT JOIN wellness_scores ws ON ws.user_id = tm.user_id AND ws.score_date = CURRENT_DATE
+      LEFT JOIN wellness_scores ws ON ws.user_id = tm.user_id AND ws.score_date = date('now')
       WHERE tm.team_id = $1
     `, [teamResult.rows[0].id]);
 
@@ -295,7 +303,7 @@ router.get('/:slug/insights', authenticate, async (req, res) => {
       SELECT ws.score_date, AVG(ws.score) as avg_score, COUNT(DISTINCT ws.user_id) as active_members
       FROM wellness_scores ws
       JOIN team_members tm ON ws.user_id = tm.user_id
-      WHERE tm.team_id = $1 AND ws.score_date >= CURRENT_DATE - 30
+      WHERE tm.team_id = $1 AND ws.score_date >= date('now', '-30 days')
       GROUP BY ws.score_date
       ORDER BY ws.score_date ASC
     `, [teamResult.rows[0].id]);
@@ -306,7 +314,7 @@ router.get('/:slug/insights', authenticate, async (req, res) => {
       FROM team_members tm
       JOIN users u ON tm.user_id = u.id
       JOIN wellness_scores ws ON ws.user_id = u.id
-      WHERE tm.team_id = $1 AND ws.score_date >= CURRENT_DATE - 14
+      WHERE tm.team_id = $1 AND ws.score_date >= date('now', '-14 days')
       ORDER BY u.username, ws.score_date
     `, [teamResult.rows[0].id]);
 

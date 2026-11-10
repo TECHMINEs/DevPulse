@@ -2,8 +2,8 @@
 // not 100% sure about the exact color thresholds but these look good visually
 
 export const getScoreColor = (score) => {
-  if (score >= 80) return '#10b981'; // emerald
-  if (score >= 70) return '#22c55e'; // green
+  if (score >= 80) return '#39FF14'; // emerald
+  if (score >= 70) return '#39FF14'; // green
   if (score >= 60) return '#84cc16'; // lime
   if (score >= 50) return '#eab308'; // yellow
   if (score >= 40) return '#f97316'; // orange
@@ -28,7 +28,7 @@ export const getScoreBadgeClass = (score) => {
 
 export const getRiskColor = (riskFlag) => {
   switch (riskFlag) {
-    case 'none': return '#10b981';
+    case 'none': return '#39FF14';
     case 'caution': return '#f59e0b';
     case 'high': return '#ef4444';
     default: return '#a1a1aa';
@@ -36,16 +36,16 @@ export const getRiskColor = (riskFlag) => {
 };
 
 export const getHeatmapColor = (count, max) => {
-  if (count === 0) return '#1e293b';
+  if (count === 0) return '#000000';
   const intensity = Math.min(count / Math.max(max, 1), 1);
   if (intensity < 0.25) return '#312e81';
-  if (intensity < 0.5) return '#bf001f';
-  if (intensity < 0.75) return '#ff0033';
+  if (intensity < 0.5) return '#DC2626';
+  if (intensity < 0.75) return '#FF0000';
   return '#818cf8';
 };
 
 export const getWellnessHeatmapColor = (score) => {
-  if (score === null || score === undefined) return '#1e293b';
+  if (score === null || score === undefined) return '#000000';
   if (score >= 80) return '#059669';
   if (score >= 60) return '#16a34a';
   if (score >= 40) return '#ca8a04';

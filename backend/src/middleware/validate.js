@@ -1,4 +1,4 @@
-const { body, param, query, validationResult } = require('express-validator');
+const { body, param, validationResult } = require('express-validator');
 
 // centralized validation error handler
 const handleValidationErrors = (req, res, next) => {
@@ -42,7 +42,16 @@ const validateSettings = [
   body('alert_threshold').optional().isInt({ min: 0, max: 100 }),
   body('alert_email').optional().isEmail().withMessage('Must be a valid email'),
   body('is_public_profile').optional().isBoolean(),
-  body('slack_webhook_url').optional().trim(),
+  // SEC-04: validate Slack webhook URL to prevent SSRF via arbitrary webhook destinations
+  body('slack_webhook_url')
+    .optional()
+    .trim()
+    .custom((val) => {
+      if (val && !val.startsWith('https://hooks.slack.com/')) {
+        throw new Error('Slack webhook URL must start with https://hooks.slack.com/');
+      }
+      return true;
+    }),
   handleValidationErrors,
 ];
 
