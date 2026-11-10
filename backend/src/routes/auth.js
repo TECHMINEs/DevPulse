@@ -56,37 +56,15 @@ router.get('/github/callback',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
 
-      // redirect to frontend with token in URL for the client to grab
-      // not ideal security-wise but needed for the OAuth redirect flow
+      // redirect to frontend — cookie is already set, no token in URL (CRIT-07)
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-      res.redirect(`${frontendUrl}/login/callback?token=${token}`);
+      res.redirect(`${frontendUrl}/login/callback`);
     } catch (error) {
       logger.error('GitHub callback error', { error: error.message });
       res.redirect('/login?error=token_generation_failed');
     }
   }
 );
-
-// GitLab OAuth — same pattern, different strategy
-// TODO: implement GitLab passport strategy properly, this is a placeholder for now
-/**
- * @swagger
- * /auth/gitlab:
- *   get:
- *     summary: Initiate GitLab OAuth flow (beta)
- *     tags: [Auth]
- *     responses:
- *       501:
- *         description: Not yet fully implemented
- */
-router.get('/gitlab', (req, res) => {
-  // GitLab OAuth is beta — need to finish this
-  res.status(501).json({ error: 'GitLab OAuth coming soon — currently in beta' });
-});
-
-router.get('/gitlab/callback', (req, res) => {
-  res.status(501).json({ error: 'GitLab OAuth coming soon' });
-});
 
 /**
  * @swagger
@@ -129,6 +107,48 @@ router.get('/me', authenticate, (req, res) => {
   // don't send access_token back to the client, that would be bad
   const { access_token, gitlab_access_token, ...safeUser } = req.user;
   res.json({ user: safeUser });
+});
+
+/**
+ * @swagger
+ * /auth/users/search:
+ *   get:
+ *     summary: Search for users to invite to a team
+ *     tags: [Auth, Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Search query (username or display name)
+ *     responses:
+ *       200:
+ *         description: List of matching users
+ */
+router.get('/users/search', authenticate, async (req, res) => {
+  try {
+    const searchQuery = req.query.q;
+    if (!searchQuery || searchQuery.length < 2) {
+      return res.json({ users: [] });
+    }
+
+    // Explicitly exclude sensitive tokens and passwords
+    const result = await query(`
+      SELECT id, username, display_name, avatar_url 
+      FROM users 
+      WHERE (username ILIKE $1 OR display_name ILIKE $1)
+      AND id != $2
+      LIMIT 10
+    `, [`%${searchQuery}%`, req.user.id]);
+
+    res.json({ users: result.rows });
+  } catch (error) {
+    logger.error('User search error', { error: error.message });
+    res.status(500).json({ error: 'Failed to search users' });
+  }
 });
 
 module.exports = router;

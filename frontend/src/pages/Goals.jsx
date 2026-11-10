@@ -5,6 +5,7 @@ import GoalCard from '../components/GoalCard';
 import { getGoals, createGoal, deleteGoal } from '../api/analytics';
 import toast from 'react-hot-toast';
 import SkeletonBox from '../components/SkeletonBox';
+import EmptyState from '../components/EmptyState';
 
 const Goals = () => {
   const queryClient = useQueryClient();
@@ -36,6 +37,17 @@ const Goals = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // QUAL-01: target value validation
+    if (parseFloat(form.target_value) < 0) {
+      return toast.error('Target value cannot be negative');
+    }
+
+    // QUAL-04: date validation
+    if (new Date(form.end_date) < new Date(form.start_date)) {
+      return toast.error('End date cannot be before start date');
+    }
+
     createMutation.mutate(form);
   };
 
@@ -47,7 +59,7 @@ const Goals = () => {
     <div className="flex min-h-screen bg-surface-950">
       <Sidebar />
       <main className="flex-1 overflow-y-auto">
-        <header className="sticky top-0 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-surface-800 px-6 py-4">
+        <header className="sticky top-11 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-surface-800 px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl font-bold">Goals</h1>
@@ -71,12 +83,12 @@ const Goals = () => {
             <>
           {/* Create goal form */}
           {showForm && (
-            <form onSubmit={handleSubmit} className="glass-card p-6 animate-slide-up">
-              <h3 className="font-semibold mb-4">Create New Goal</h3>
+            <form onSubmit={handleSubmit} className="glass-card p-6 animate-slide-up border border-primary-500/20">
+              <h3 className="font-semibold mb-4 text-white">Create New Goal</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input
                   type="text"
-                  placeholder="Goal title..."
+                  placeholder="Goal title (e.g. Daily Commit Target)"
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
                   className="input-field"
@@ -94,30 +106,38 @@ const Goals = () => {
                 </select>
                 <input
                   type="number"
-                  placeholder="Target value"
+                  placeholder="Target value (e.g. 5)"
                   value={form.target_value}
                   onChange={(e) => setForm({ ...form, target_value: e.target.value })}
                   className="input-field"
+                  min="0"
+                  step="any"
                   required
                 />
                 <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="date"
-                    value={form.start_date}
-                    onChange={(e) => setForm({ ...form, start_date: e.target.value })}
-                    className="input-field"
-                    required
-                  />
-                  <input
-                    type="date"
-                    value={form.end_date}
-                    onChange={(e) => setForm({ ...form, end_date: e.target.value })}
-                    className="input-field"
-                    required
-                  />
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] text-surface-500 uppercase font-bold ml-1">Start Date</span>
+                    <input
+                      type="date"
+                      value={form.start_date}
+                      onChange={(e) => setForm({ ...form, start_date: e.target.value })}
+                      className="input-field"
+                      required
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] text-surface-500 uppercase font-bold ml-1">End Date</span>
+                    <input
+                      type="date"
+                      value={form.end_date}
+                      onChange={(e) => setForm({ ...form, end_date: e.target.value })}
+                      className="input-field"
+                      required
+                    />
+                  </div>
                 </div>
               </div>
-              <button type="submit" className="btn-primary mt-4 text-sm" disabled={createMutation.isPending}>
+              <button type="submit" className="btn-primary mt-6 text-sm w-full md:w-auto" disabled={createMutation.isPending}>
                 {createMutation.isPending ? 'Creating...' : 'Create Goal'}
               </button>
             </form>
@@ -125,14 +145,17 @@ const Goals = () => {
 
           {/* Active goals */}
           <div>
-            <h2 className="text-sm font-semibold text-surface-300 mb-3">Active Goals ({active.length})</h2>
+            <h2 className="text-sm font-semibold text-surface-300 mb-4 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-primary-500 animate-pulse"></span>
+              Active Goals ({active.length})
+            </h2>
             {active.length === 0 ? (
-              <div className="glass-card flex flex-col items-center justify-center py-20 px-4 text-center">
-                <span className="text-6xl mb-4 drop-shadow-2xl">🎯</span>
-                <h3 className="text-xl font-bold text-surface-200 mb-2">No active goals</h3>
-                <p className="text-surface-400 max-w-sm mb-6">Create a goal to start tracking your progress and improve your developer wellness.</p>
-                <button className="btn-primary" onClick={() => setShowForm(true)}>+ Create Your First Goal</button>
-              </div>
+              <EmptyState 
+                title="No active goals"
+                description="Create a goal to start tracking your progress and improve your developer wellness."
+                actionLabel="+ Create Your First Goal"
+                onAction={() => setShowForm(true)}
+              />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {active.map(goal => (

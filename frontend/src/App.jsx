@@ -1,6 +1,8 @@
 import React from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import useStore from './store/useStore';
+import client from './api/client';
 
 // Static imports to prevent Safari ChunkLoadError
 import Login from './pages/Login';
@@ -21,6 +23,8 @@ import NavigationProgress from './components/NavigationProgress';
 import MobileNav from './components/MobileNav';
 
 import { useEffect } from 'react';
+import BrandBar from './components/brand/BrandBar';
+import BrandFooter from './components/brand/BrandFooter';
 
 // protected route wrapper
 const ProtectedRoute = ({ children }) => {
@@ -34,29 +38,52 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// admin route wrapper
+/**
+ * CRIT-14: AdminRoute now verifies role server-side before rendering.
+ * localStorage role is trivially spoofable; an API call confirms the actual role.
+ */
 const AdminRoute = ({ children }) => {
   const user = useStore((s) => s.user);
 
-  if (!user || user.role !== 'admin') {
-    return <Navigate to="/dashboard" replace />;
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['adminVerify'],
+    queryFn: () => client.get('/api/admin/verify').then(r => r.data),
+    retry: false,
+    staleTime: 60_000,
+    enabled: !!user && user.role === 'admin',
+  });
+
+  if (!user || user.role !== 'admin') return <Navigate to="/dashboard" replace />;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-surface-950 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary-500 rounded-full border-t-transparent animate-spin" />
+      </div>
+    );
   }
+  if (isError || !data?.verified) return <Navigate to="/dashboard" replace />;
 
   return children;
 };
 
 function App() {
+  const navigate = useNavigate();
+
   useEffect(() => {
+    // CRIT-12: use navigate() instead of window.location.href to avoid full
+    // page reload which destroys the React query cache and component state.
     const handleUnauthorized = () => {
       useStore.getState().clearAuth();
-      window.location.href = '/login';
+      navigate('/login', { replace: true });
     };
     window.addEventListener('devpulse:unauthorized', handleUnauthorized);
     return () => window.removeEventListener('devpulse:unauthorized', handleUnauthorized);
-  }, []);
+  }, [navigate]);
 
   return (
     <>
+      <BrandBar project="DevPulse — Developer Intelligence" />
+
       <NavigationProgress />
       <MobileNav />
       <CommandPalette />
@@ -77,13 +104,15 @@ function App() {
         <Route path="/team/:slug" element={<ProtectedRoute><TeamDashboard /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
 
-        {/* Admin route */}
+        {/* Admin route — CRIT-14: server-side role verified before rendering */}
         <Route path="/admin" element={<ProtectedRoute><AdminRoute><AdminPanel /></AdminRoute></ProtectedRoute>} />
 
         {/* Redirects */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
+      {/* Bottom padding on mobile clears the fixed MobileNav tab bar */}
+      <BrandFooter className="pb-20 lg:pb-4" />
     </>
   );
 }

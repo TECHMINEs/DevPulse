@@ -27,7 +27,7 @@ const AdminPanel = () => {
     <div className="flex min-h-screen bg-surface-950">
       <Sidebar />
       <main className="flex-1 overflow-y-auto">
-        <header className="sticky top-0 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-surface-800 px-6 py-4">
+        <header className="sticky top-11 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-surface-800 px-6 py-4">
           <h1 className="text-xl font-bold">🛡️ Admin Panel</h1>
           <p className="text-xs text-surface-500">Platform administration</p>
         </header>

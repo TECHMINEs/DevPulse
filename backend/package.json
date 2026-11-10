@@ -7,11 +7,10 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "lint": "eslint src/",
-    "db:init": "psql $DATABASE_URL -f src/db/schema.sql"
+    "db:init": "node -e \"const {initDB}=require('./src/db/pool');const fs=require('fs');const path=require('path');initDB().then(db=>db.exec(fs.readFileSync(path.join(__dirname,'src/db/schema.sql'),'utf-8'))).then(()=>{console.log('✅ Schema applied');process.exit(0)}).catch(e=>{console.error('❌',e.message);process.exit(1)})\""
   },
   "dependencies": {
     "axios": "^1.6.7",
-    "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.4.4",
@@ -21,14 +20,12 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "lru-cache": "^11.3.5",
-    "multer": "^1.4.5-lts.1",
     "node-cron": "^3.0.3",
     "nodemailer": "^6.9.9",
     "passport": "^0.7.0",
     "passport-github2": "^0.1.12",
     "pdfkit": "^0.14.0",
     "rate-limiter-flexible": "^5.0.0",
-    "sharp": "^0.33.2",
     "socket.io": "^4.7.4",
     "sqlite": "^5.1.1",
     "sqlite3": "^6.0.1",

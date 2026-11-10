@@ -1,5 +1,4 @@
 const db = require('../db/pool');
-const logger = require('../utils/logger');
 
 // not 100% sure this is the right formula but the scores feel right empirically
 // the idea is: more night commits = worse wellness, more regular hours = better
@@ -17,9 +16,8 @@ const computeWellnessScore = (features) => {
 
   let score = 100;
 
-  // penalize night commits (midnight to 5am) — this is the biggest red flag
-  // if 50%+ of your commits are at night, that's not great
-  score -= night_commit_pct * 40;
+  // penalize night commits (midnight to 5am) — BUG-11: use multiplier
+  score -= (night_commit_pct * 40);
 
   // penalize heavy weekend work (some is fine, >60% is burnout territory)
   if (weekend_commit_pct > 0.6) {
@@ -153,19 +151,20 @@ const calculateDailyWellness = async (userId, date = new Date()) => {
     lines_changed: totalLinesChanged,
   });
 
-  if (risk_flag === 'high') {
-    const userRes = await db.query('SELECT slack_webhook_url, username FROM users WHERE id = $1', [userId]);
-    const user = userRes.rows[0];
-    if (user && user.slack_webhook_url) {
-      try {
-        const axios = require('axios');
-        await axios.post(user.slack_webhook_url, {
-          text: `⚠️ *DevPulse Alert:* High burnout risk detected for ${user.username} (Score: ${score.toFixed(1)}). Consider checking in.`
-        });
-      } catch (err) {
-        logger.warn('Failed to send slack alert', { error: err.message });
-      }
-    }
+  // FEAT-02: Send Slack alert if score is below user's threshold
+  const userRes = await db.query(
+    'SELECT slack_webhook_url, username, alert_threshold FROM users WHERE id = $1',
+    [userId]
+  );
+  const user = userRes.rows[0];
+  
+  if (user && user.slack_webhook_url && score <= (user.alert_threshold || 40)) {
+    const slackService = require('./slackService');
+    await slackService.sendWellnessAlert(user.slack_webhook_url, {
+      score: score.toFixed(1),
+      username: user.username,
+      riskFlag: risk_flag,
+    });
   }
 
   return { score, risk_flag, features };

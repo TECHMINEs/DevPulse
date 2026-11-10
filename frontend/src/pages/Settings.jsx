@@ -2,12 +2,10 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Sidebar from '../components/Sidebar';
 import { getProfile, updateProfile, updateSettings, triggerSync } from '../api/analytics';
-import useStore from '../store/useStore';
 import toast from 'react-hot-toast';
 
 const Settings = () => {
   const queryClient = useQueryClient();
-  const clearAuth = useStore((s) => s.clearAuth);
   const { data } = useQuery({ queryKey: ['profile'], queryFn: getProfile });
   const profile = data?.profile;
 
@@ -52,7 +50,7 @@ const Settings = () => {
     <div className="flex min-h-screen bg-surface-950">
       <Sidebar />
       <main className="flex-1 overflow-y-auto">
-        <header className="sticky top-0 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-surface-800 px-6 py-4">
+        <header className="sticky top-11 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-surface-800 px-6 py-4">
           <h1 className="text-xl font-bold">Settings</h1>
         </header>
 
@@ -95,7 +93,7 @@ const Settings = () => {
                   onClick={() => setSettingsForm({ ...settingsForm, weekly_digest_enabled: !settingsForm.weekly_digest_enabled })}
                   className={`w-12 h-6 rounded-full transition-colors ${settingsForm.weekly_digest_enabled ? 'bg-primary-500' : 'bg-surface-700'}`}
                 >
-                  <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${settingsForm.weekly_digest_enabled ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                  <div className={`w-5 h-5 rounded-full bg-black shadow transition-transform ${settingsForm.weekly_digest_enabled ? 'translate-x-6' : 'translate-x-0.5'}`} />
                 </button>
               </label>
               <div>
@@ -135,7 +133,7 @@ const Settings = () => {
                 }}
                 className={`w-12 h-6 rounded-full transition-colors ${settingsForm.is_public_profile ? 'bg-primary-500' : 'bg-surface-700'}`}
               >
-                <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${settingsForm.is_public_profile ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                <div className={`w-5 h-5 rounded-full bg-black shadow transition-transform ${settingsForm.is_public_profile ? 'translate-x-6' : 'translate-x-0.5'}`} />
               </button>
             </label>
           </section>

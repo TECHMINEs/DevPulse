@@ -1,25 +1,44 @@
 import React from 'react';
 
-const TeamMemberCard = ({ member, rank }) => {
-  const scoreColor = member.latest_score >= 70 ? 'text-emerald-400' : member.latest_score >= 40 ? 'text-amber-400' : 'text-red-400';
-
+const TeamMemberCard = ({ member }) => {
+  const isHighRisk = member.risk_flag === 'high';
+  
   return (
-    <div className="glass-card p-4 flex items-center gap-4">
-      <div className="text-lg font-bold text-surface-500 w-8 text-center">#{rank}</div>
-      <img
-        src={member.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.username}`}
-        alt={member.username}
-        className="w-10 h-10 rounded-full border-2 border-surface-700"
-      />
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium truncate">{member.display_name || member.username}</p>
-        <p className="text-xs text-surface-500">@{member.username}</p>
+    <div className={`glass-card p-4 flex items-center justify-between group transition-all duration-300 hover:-translate-y-1 ${isHighRisk ? 'border-red-500/30 bg-red-500/5' : 'hover:border-primary-500/30'}`}>
+      <div className="flex items-center gap-4">
+        <div className="relative">
+          <img 
+            src={member.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.username}`} 
+            alt={member.username} 
+            className="w-12 h-12 rounded-xl border border-white/10"
+          />
+          {isHighRisk && (
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-surface-900 animate-pulse" />
+          )}
+        </div>
+        
+        <div>
+          <h4 className="font-bold text-white text-sm">
+            {member.display_name || member.username}
+          </h4>
+          <p className="text-xs text-surface-400">@{member.username}</p>
+        </div>
       </div>
-      <div className="text-right">
-        <p className={`text-lg font-bold ${scoreColor}`}>
-          {member.latest_score ? parseFloat(member.latest_score).toFixed(0) : '—'}
+
+      <div className="flex flex-col items-end">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-[10px] uppercase tracking-wider text-surface-500 font-bold">
+            {member.role}
+          </span>
+          {member.latest_score && (
+            <span className={`text-sm font-black ${parseFloat(member.latest_score) >= 70 ? 'text-emerald-400' : isHighRisk ? 'text-red-400' : 'text-amber-400'}`}>
+              {parseFloat(member.latest_score).toFixed(0)}
+            </span>
+          )}
+        </div>
+        <p className="text-[10px] text-surface-600">
+          Joined {new Date(member.joined_at).toLocaleDateString()}
         </p>
-        <p className="text-[10px] text-surface-500">wellness</p>
       </div>
     </div>
   );

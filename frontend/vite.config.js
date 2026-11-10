@@ -12,8 +12,8 @@ export default defineConfig({
         name: 'DevPulse — Developer Intelligence',
         short_name: 'DevPulse',
         description: 'Your GitHub. Understood.',
-        theme_color: '#6366f1',
-        background_color: '#0f172a',
+        theme_color: '#000000',
+        background_color: '#000000',
         display: 'standalone',
         icons: [
           {

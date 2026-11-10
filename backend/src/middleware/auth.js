@@ -2,38 +2,21 @@ const jwt = require('jsonwebtoken');
 const db = require('../db/pool');
 const logger = require('../utils/logger');
 
-// --- lightweight LRU-style user cache ----------------------------------------
-// Avoids a DB round-trip on every authenticated request. Max 500 entries,
-// 30-second TTL. Token revocation still kicks in within one TTL window.
-const USER_CACHE_TTL = 30 * 1000; // 30 s
-const USER_CACHE_MAX = 500;
-const _userCache = new Map(); // key: `${userId}:${token_version}`
+const { LRUCache } = require('lru-cache');
 
-const _pruneCache = () => {
-  const now = Date.now();
-  for (const [key, entry] of _userCache) {
-    if (now > entry.expiresAt) _userCache.delete(key);
-  }
-};
+// PERF-02: Use industry-standard lru-cache instead of hand-rolled Map
+const _userCache = new LRUCache({
+  max: 500,
+  ttl: 30 * 1000, // 30 seconds
+});
 
 const _getCached = (userId, tokenVersion) => {
-  const key = `${userId}:${tokenVersion}`;
-  const entry = _userCache.get(key);
-  if (!entry || Date.now() > entry.expiresAt) {
-    _userCache.delete(key);
-    return null;
-  }
-  return entry.user;
+  return _userCache.get(`${userId}:${tokenVersion}`);
 };
 
 const _setCache = (userId, tokenVersion, user) => {
-  if (_userCache.size >= USER_CACHE_MAX) _pruneCache();
-  _userCache.set(`${userId}:${tokenVersion}`, {
-    user,
-    expiresAt: Date.now() + USER_CACHE_TTL,
-  });
+  _userCache.set(`${userId}:${tokenVersion}`, user);
 };
-// -----------------------------------------------------------------------------
 
 // JWT auth middleware — checks both Authorization header and httpOnly cookie
 const authenticate = async (req, res, next) => {
@@ -66,7 +49,7 @@ const authenticate = async (req, res, next) => {
 
     // cache miss — fetch from DB
     const result = await db.query(
-      'SELECT id, username, display_name, email, avatar_url, role, provider, token_version FROM users WHERE id = $1',
+      'SELECT id, username, display_name, email, avatar_url, role, provider, focus, onboarding_completed, token_version FROM users WHERE id = $1',
       [decoded.userId]
     );
 

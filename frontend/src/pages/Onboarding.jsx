@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import useStore from '../store/useStore';
+import { useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 
 const Onboarding = () => {
   const [focus, setFocus] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const user = useStore(s => s.user);
   const updateUser = useStore(s => s.updateUser);
+  const queryClient = useQueryClient();
 
   const handleSubmit = async () => {
     if (!focus) return;
@@ -16,9 +18,11 @@ const Onboarding = () => {
     try {
       await client.post('/api/user/onboarding', { focus });
       updateUser({ onboarding_completed: true, focus });
+      // Refresh the cached profile so the dashboard does not bounce back here
+      await queryClient.invalidateQueries({ queryKey: ['profile'] });
       navigate('/dashboard');
     } catch (error) {
-      console.error('Onboarding failed:', error);
+      toast.error(error.response?.data?.error || 'Could not save your preferences. Please try again.');
       setLoading(false);
     }
   };

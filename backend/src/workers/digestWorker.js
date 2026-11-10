@@ -1,13 +1,12 @@
 const { digestQueue } = require('../queues/digestQueue');
 const emailService = require('../services/emailService');
 const wellnessService = require('../services/wellnessService');
-const achievementService = require('../services/achievementService');
 const db = require('../db/pool');
 const logger = require('../utils/logger');
 
 // Weekly digest worker — processes every Monday at 8am
 // email template broken on gmail, had to inline all css
-digestQueue.process('send-digests', async (job) => {
+digestQueue.process('send-digests', async () => {
   logger.info('Processing weekly digest job');
 
   try {
@@ -15,7 +14,7 @@ digestQueue.process('send-digests', async (job) => {
     const usersResult = await db.query(`
       SELECT id, username, display_name, email, alert_email
       FROM users
-      WHERE weekly_digest_enabled = true
+      WHERE weekly_digest_enabled = 1
         AND (email IS NOT NULL OR alert_email IS NOT NULL)
     `);
 
@@ -123,6 +122,13 @@ digestQueue.process('send-digests', async (job) => {
         await db.query(`
           INSERT INTO weekly_digests (user_id, week_start, avg_score, total_commits, top_repo, ai_summary, ai_recommendations)
           VALUES ($1, $2, $3, $4, $5, $6, $7)
+          ON CONFLICT(user_id, week_start) DO UPDATE SET
+            avg_score = EXCLUDED.avg_score,
+            total_commits = EXCLUDED.total_commits,
+            top_repo = EXCLUDED.top_repo,
+            ai_summary = EXCLUDED.ai_summary,
+            ai_recommendations = EXCLUDED.ai_recommendations,
+            sent_at = CURRENT_TIMESTAMP
         `, [user.id, weekStartStr, avgScore, totalCommits, topRepo, aiSummary, JSON.stringify(aiRecommendations)]);
       }));
 

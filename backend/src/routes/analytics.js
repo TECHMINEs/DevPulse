@@ -5,11 +5,21 @@ const wellnessService = require('../services/wellnessService');
 const mlService = require('../services/mlService');
 const logger = require('../utils/logger');
 
+// SAFE_USER_COLUMNS: never expose access_token / gitlab_access_token (PERF-05 / CRIT-11)
+const SAFE_USER_COLS = `
+  u.id, u.username, u.display_name, u.email, u.avatar_url, u.bio,
+  u.location, u.company, u.provider, u.role, u.focus,
+  u.is_public_profile, u.onboarding_completed, u.weekly_digest_enabled,
+  u.alert_threshold, u.alert_email, u.slack_webhook_url,
+  u.token_version, u.created_at, u.last_synced_at, u.updated_at
+`.trim();
+
 router.get('/dashboard', authenticate, async (req, res) => {
   try {
     const userId = req.user.id;
     const [profileResult, wellnessResult, commitsResult, hourlyResult, languagesResult, reposResult, achievementsResult] = await Promise.all([
-      db.query(`SELECT u.*,
+      // PERF-05: explicit columns — no access_token leakage
+      db.query(`SELECT ${SAFE_USER_COLS},
         (SELECT COUNT(*) FROM commit_snapshots WHERE user_id=u.id) as total_commits,
         (SELECT COUNT(*) FROM repositories WHERE user_id=u.id) as total_repos,
         (SELECT ws.score FROM wellness_scores ws WHERE ws.user_id=u.id ORDER BY ws.score_date DESC LIMIT 1) as current_score,
@@ -17,17 +27,27 @@ router.get('/dashboard', authenticate, async (req, res) => {
         (SELECT ws.risk_flag FROM wellness_scores ws WHERE ws.user_id=u.id ORDER BY ws.score_date DESC LIMIT 1) as risk_flag
         FROM users u WHERE u.id=$1`, [userId]),
       wellnessService.getWellnessHistory(userId, 90),
-      db.query('SELECT DATE(committed_at) as date, COUNT(*) as count FROM commit_snapshots WHERE user_id=$1 AND committed_at >= CURRENT_DATE - 365 GROUP BY DATE(committed_at) ORDER BY date ASC', [userId]),
+      // CRIT-05: date('now', '-365 days') instead of CURRENT_DATE - 365
+      db.query(`SELECT DATE(committed_at) as date, COUNT(*) as count
+        FROM commit_snapshots
+        WHERE user_id=$1 AND committed_at >= date('now', '-365 days')
+        GROUP BY DATE(committed_at) ORDER BY date ASC`, [userId]),
       db.query('SELECT hour_of_day as hour, COUNT(*) as count FROM commit_snapshots WHERE user_id=$1 GROUP BY hour_of_day ORDER BY hour_of_day', [userId]),
       db.query('SELECT language, COUNT(*) as count FROM repositories WHERE user_id=$1 AND language IS NOT NULL GROUP BY language ORDER BY count DESC LIMIT 10', [userId]),
-      db.query(`SELECT r.id, r.name, r.description, r.language, COUNT(cs.id) as commit_count FROM repositories r LEFT JOIN commit_snapshots cs ON r.id=cs.repo_id AND cs.committed_at >= CURRENT_DATE - 30 WHERE r.user_id=$1 GROUP BY r.id ORDER BY commit_count DESC LIMIT 6`, [userId]),
+      // CRIT-05: date('now', '-30 days') instead of CURRENT_DATE - 30
+      db.query(`SELECT r.id, r.name, r.description, r.language, COUNT(cs.id) as commit_count
+        FROM repositories r
+        LEFT JOIN commit_snapshots cs ON r.id=cs.repo_id AND cs.committed_at >= date('now', '-30 days')
+        WHERE r.user_id=$1 GROUP BY r.id ORDER BY commit_count DESC LIMIT 6`, [userId]),
       db.query('SELECT a.*, ua.earned_at FROM user_achievements ua JOIN achievements a ON ua.achievement_id=a.id WHERE ua.user_id=$1 ORDER BY ua.earned_at DESC LIMIT 3', [userId]),
     ]);
     res.json({ profile: profileResult.rows[0], wellness: wellnessResult, commits: commitsResult.rows, hourly: hourlyResult.rows, languages: languagesResult.rows, repos: reposResult.rows, achievements: achievementsResult.rows });
   } catch (error) {
+    logger.error('Dashboard error', { error: error.message });
     res.status(500).json({ error: 'Failed to load dashboard data' });
   }
 });
+
 /**
  * @swagger
  * /api/analytics/wellness:
@@ -160,11 +180,11 @@ router.get('/streak', authenticate, async (req, res) => {
       WHERE user_id = $1
     `, [req.user.id]);
 
-    // get calendar data (dates with commits for the last year)
+    // CRIT-05: use SQLite date syntax
     const calendarResult = await db.query(`
       SELECT DATE(committed_at) as date, COUNT(*) as count
       FROM commit_snapshots
-      WHERE user_id = $1 AND committed_at >= CURRENT_DATE - 365
+      WHERE user_id = $1 AND committed_at >= date('now', '-365 days')
       GROUP BY DATE(committed_at)
       ORDER BY date ASC
     `, [req.user.id]);
@@ -219,7 +239,6 @@ router.get('/velocity', authenticate, async (req, res) => {
  */
 router.get('/radar', authenticate, async (req, res) => {
   try {
-    // get recent data for calculations
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
     const commitsResult = await db.query(`
@@ -232,10 +251,11 @@ router.get('/radar', authenticate, async (req, res) => {
       WHERE user_id = $1 AND committed_at >= $2
     `, [req.user.id, thirtyDaysAgo.toISOString()]);
 
+    // CRIT-05: SQLite date syntax
     const wellnessResult = await db.query(`
       SELECT AVG(score) as avg_score
       FROM wellness_scores
-      WHERE user_id = $1 AND score_date >= CURRENT_DATE - 30
+      WHERE user_id = $1 AND score_date >= date('now', '-30 days')
     `, [req.user.id]);
 
     const stats = commitsResult.rows[0];
@@ -244,10 +264,10 @@ router.get('/radar', authenticate, async (req, res) => {
     // normalize each dimension to 0-100
     const radar = {
       consistency: Math.min(100, (parseInt(stats.active_days) / 30) * 100),
-      volume: Math.min(100, (parseInt(stats.total) / 150) * 100), // 150 commits/month = 100
+      volume: Math.min(100, (parseInt(stats.total) / 150) * 100),
       timing: (parseFloat(stats.work_hours_pct) || 0) * 100,
       diversity: Math.min(100, (parseInt(stats.unique_repos) / 5) * 100),
-      quality: Math.min(100, (parseFloat(stats.avg_msg_len) / 50) * 100), // 50 chars = 100
+      quality: Math.min(100, (parseFloat(stats.avg_msg_len) / 50) * 100),
       wellness: avgWellness,
     };
 
@@ -267,8 +287,6 @@ router.get('/radar', authenticate, async (req, res) => {
  */
 router.get('/benchmark', authenticate, async (req, res) => {
   try {
-    // hardcoding the benchmark values for now, ideally would come from aggregated data
-    // these are based on research + educated guesses from GitHub data
     const industryAverage = {
       commits_per_week: 25,
       avg_commit_message_length: 35,
@@ -280,7 +298,7 @@ router.get('/benchmark', authenticate, async (req, res) => {
       languages_used: 3,
     };
 
-    // get user's actual metrics
+    // CRIT-05: all CURRENT_DATE - N replaced with date('now', '-N days')
     const commitResult = await db.query(`
       SELECT
         CAST(COUNT(*) AS REAL) / MAX(1, CAST((julianday('now') - julianday(MIN(committed_at))) / 7 AS INTEGER)) as commits_per_week,
@@ -288,19 +306,19 @@ router.get('/benchmark', authenticate, async (req, res) => {
         AVG(CASE WHEN hour_of_day >= 0 AND hour_of_day < 5 THEN 1.0 ELSE 0.0 END) as night_commit_pct,
         AVG(CASE WHEN is_weekend THEN 1.0 ELSE 0.0 END) as weekend_commit_pct
       FROM commit_snapshots
-      WHERE user_id = $1 AND committed_at >= CURRENT_DATE - 90
+      WHERE user_id = $1 AND committed_at >= date('now', '-90 days')
     `, [req.user.id]);
 
     const repoResult = await db.query(`
       SELECT COUNT(DISTINCT repo_id) as repos_active
       FROM commit_snapshots
-      WHERE user_id = $1 AND committed_at >= CURRENT_DATE - 30
+      WHERE user_id = $1 AND committed_at >= date('now', '-30 days')
     `, [req.user.id]);
 
     const wellnessResult = await db.query(`
       SELECT AVG(score) as avg_score, MAX(streak_days) as max_streak
       FROM wellness_scores
-      WHERE user_id = $1 AND score_date >= CURRENT_DATE - 30
+      WHERE user_id = $1 AND score_date >= date('now', '-30 days')
     `, [req.user.id]);
 
     const langResult = await db.query(`
@@ -337,7 +355,7 @@ router.get('/benchmark', authenticate, async (req, res) => {
  */
 router.get('/predictions', authenticate, async (req, res) => {
   try {
-    // get recent features for prediction
+    // CRIT-05: SQLite date syntax
     const recentData = await db.query(`
       SELECT
         AVG(hour_of_day) as avg_commit_hour,
@@ -348,7 +366,7 @@ router.get('/predictions', authenticate, async (req, res) => {
         CAST(COUNT(*) AS REAL) / 7 as commits_per_day,
         AVG(files_changed) as files_per_commit
       FROM commit_snapshots
-      WHERE user_id = $1 AND committed_at >= CURRENT_DATE - 7
+      WHERE user_id = $1 AND committed_at >= date('now', '-7 days')
     `, [req.user.id]);
 
     const streakResult = await db.query(`
@@ -359,10 +377,12 @@ router.get('/predictions', authenticate, async (req, res) => {
     const features = recentData.rows[0];
     const streak = streakResult.rows[0]?.streak_days || 0;
 
-    // call ML service for next 7 days prediction
-    const predictions = [];
-    for (let day = 1; day <= 7; day++) {
-      const prediction = await mlService.predictWellness({
+    // CRIT-16: Parallelize all 7 ML calls instead of sequential awaits
+    const predictionPromises = Array.from({ length: 7 }, (_, i) => {
+      const day = i + 1;
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + day);
+      return mlService.predictWellness({
         avg_commit_hour: parseFloat(features.avg_commit_hour) || 14,
         night_commit_pct: parseFloat(features.night_commit_pct) || 0,
         weekend_commit_pct: parseFloat(features.weekend_commit_pct) || 0,
@@ -371,16 +391,10 @@ router.get('/predictions', authenticate, async (req, res) => {
         commits_per_day: parseFloat(features.commits_per_day) || 3,
         streak_length: streak + day,
         files_per_commit: parseFloat(features.files_per_commit) || 3,
-      });
+      }).then(pred => ({ date: futureDate.toISOString().split('T')[0], ...pred }));
+    });
 
-      const futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + day);
-
-      predictions.push({
-        date: futureDate.toISOString().split('T')[0],
-        ...prediction,
-      });
-    }
+    const predictions = await Promise.all(predictionPromises);
 
     // also get actual scores for context
     const actualScores = await wellnessService.getWellnessHistory(req.user.id, 14);

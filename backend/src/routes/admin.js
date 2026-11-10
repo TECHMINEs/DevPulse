@@ -7,6 +7,17 @@ const logger = require('../utils/logger');
 
 /**
  * @swagger
+ * /api/admin/verify:
+ *   get:
+ *     summary: Verify admin access server-side (CRIT-14)
+ *     tags: [Admin]
+ */
+router.get('/verify', authenticate, adminOnly, (req, res) => {
+  res.json({ verified: true, username: req.user.username });
+});
+
+/**
+ * @swagger
  * /api/admin/stats:
  *   get:
  *     summary: Get platform statistics
@@ -20,9 +31,8 @@ router.get('/stats', authenticate, adminOnly, async (req, res) => {
     const activeResult = await db.query(`
       SELECT COUNT(DISTINCT user_id) as count
       FROM commit_snapshots
-      WHERE committed_at >= CURRENT_DATE
+      WHERE committed_at >= date('now')
     `);
-
     // check service health
     const mlHealth = await mlService.healthCheck();
 

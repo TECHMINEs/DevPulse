@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Sidebar from '../components/Sidebar';
 import RepoCard from '../components/RepoCard';
+import EmptyState from '../components/EmptyState';
 import { getRepos } from '../api/repos';
 
 const Repos = () => {
@@ -32,7 +33,7 @@ const Repos = () => {
     <div className="flex min-h-screen bg-surface-950">
       <Sidebar />
       <main className="flex-1 overflow-y-auto">
-        <header className="sticky top-0 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-surface-800 px-6 py-4">
+        <header className="sticky top-11 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-surface-800 px-6 py-4">
           <h1 className="text-xl font-bold">Repositories</h1>
           <p className="text-xs text-surface-500">{repos.length} repositories tracked</p>
         </header>
@@ -78,11 +79,23 @@ const Repos = () => {
           )}
 
           {filtered.length === 0 && !isLoading && (
-            <div className="glass-card flex flex-col items-center justify-center py-20 px-4 text-center mt-8">
-              <span className="text-6xl mb-4 drop-shadow-2xl">📂</span>
-              <h3 className="text-xl font-bold text-surface-200 mb-2">No repositories found</h3>
-              <p className="text-surface-400 max-w-sm mb-6">We couldn&apos;t find any repositories matching your criteria. Try adjusting your filters or sync your latest data from GitHub.</p>
-              <button className="btn-primary" onClick={() => { setSearch(''); setLangFilter('all'); }}>Clear Filters</button>
+            <div className="mt-8">
+              <EmptyState 
+                title="No repositories found"
+                description={search || langFilter !== 'all' 
+                  ? "We couldn't find any repositories matching your criteria. Try adjusting your filters." 
+                  : "You haven't synced any repositories yet. Connect your GitHub account to get started."}
+                actionLabel={search || langFilter !== 'all' ? "Clear Filters" : "Sync Now"}
+                onAction={() => {
+                  if (search || langFilter !== 'all') {
+                    setSearch('');
+                    setLangFilter('all');
+                  } else {
+                    // navigate to dashboard to sync or trigger sync here
+                    window.dispatchEvent(new CustomEvent('devpulse:trigger-sync'));
+                  }
+                }}
+              />
             </div>
           )}
         </div>

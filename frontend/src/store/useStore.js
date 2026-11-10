@@ -1,46 +1,36 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+/**
+ * CRIT-09: token is NO LONGER persisted to localStorage.
+ * Auth is handled by the httpOnly cookie set by the backend.
+ *
+ * CRIT-13: memoryToken is kept in runtime state (not persisted) so
+ * useSocket can authenticate WebSocket connections without hitting localStorage.
+ */
 const useStore = create(
   persist(
-    (set, get) => ({
-      // auth state
-      token: null,
+    (set) => ({
+      // auth state — token is memory-only, never persisted
+      token: null,      // kept for legacy compat but excluded from partialize
+      memoryToken: null, // CRIT-13: used by useSocket for WS auth
       user: null,
 
       // UI state
       sidebarOpen: true,
-      darkMode: true,
 
       // sync state
       isSyncing: false,
       syncProgress: null,
 
       // actions
-      setAuth: (token, user) => set({ token, user }),
-      clearAuth: () => set({ token: null, user: null }),
+      setAuth: (token, user) => set({ token, memoryToken: token, user }),
+      clearAuth: () => set({ token: null, memoryToken: null, user: null }),
       updateUser: (updates) => set((state) => ({ user: { ...state.user, ...updates } })),
 
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
       toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
 
-      setDarkMode: (dark) => {
-        if (dark) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-        set({ darkMode: dark });
-      },
-      toggleDarkMode: () => {
-        const newMode = !get().darkMode;
-        if (newMode) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-        set({ darkMode: newMode });
-      },
 
       setSyncing: (syncing) => set({ isSyncing: syncing }),
       setSyncProgress: (progress) => set({ syncProgress: progress }),
@@ -48,9 +38,9 @@ const useStore = create(
     {
       name: 'devpulse-store',
       partialize: (state) => ({
-        token: state.token,
+        // CRIT-09: token intentionally excluded — auth is via httpOnly cookie
+        // CRIT-13: memoryToken intentionally excluded — runtime only, socket auth
         user: state.user,
-        darkMode: state.darkMode,
         sidebarOpen: state.sidebarOpen,
       }),
     }
