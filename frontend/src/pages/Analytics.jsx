@@ -39,11 +39,11 @@ const Analytics = () => {
   ];
 
   return (
-    <div className="flex min-h-screen bg-surface-950">
+    <div className="flex min-h-screen">
       <Sidebar />
 
       <main className="flex-1 overflow-y-auto">
-        <header className="sticky top-11 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-surface-800 px-6 py-4">
+        <header className="sticky top-11 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-line px-6 py-4">
           <h1 className="text-xl font-bold">Deep Analytics</h1>
           <p className="text-xs text-surface-500">Comprehensive analysis of your development patterns</p>
         </header>
@@ -67,15 +67,15 @@ const Analytics = () => {
               <h2 className="text-sm font-semibold text-surface-300 mb-4">Developer Profile Radar</h2>
               <ResponsiveContainer width="100%" height={300}>
                 <RadarChart data={radarChart}>
-                  <PolarGrid stroke="#FF0000" />
+                  <PolarGrid stroke="#FF2626" />
                   <PolarAngleAxis dataKey="dimension" tick={{ fontSize: 11, fill: '#A3A3A3' }} />
                   <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 9, fill: '#a1a1aa' }} />
-                  <Radar name="You" dataKey="user" stroke="#FF0000" fill="#FF0000" fillOpacity={0.3} strokeWidth={2} />
+                  <Radar name="You" dataKey="user" stroke="#FF2626" fill="#FF2626" fillOpacity={0.3} strokeWidth={2} />
                   <Radar name="Industry Avg" dataKey="benchmark" stroke="#a1a1aa" fill="#a1a1aa" fillOpacity={0.1} strokeWidth={1} strokeDasharray="5 5" />
                   <Legend
                     wrapperStyle={{ fontSize: '11px', color: '#A3A3A3' }}
                   />
-                  <Tooltip contentStyle={{ backgroundColor: '#000000', border: '1px solid #FF0000', borderRadius: 0, fontSize: '12px' }} />
+                  <Tooltip contentStyle={{ backgroundColor: '#000000', border: '1px solid #FF2626', borderRadius: 0, fontSize: '12px' }} />
                 </RadarChart>
               </ResponsiveContainer>
             </div>
@@ -95,8 +95,8 @@ const Analytics = () => {
                 <CartesianGrid strokeDasharray="3 3" stroke="#000000" />
                 <XAxis dataKey="week" tick={{ fontSize: 10, fill: '#a1a1aa' }} />
                 <YAxis tick={{ fontSize: 10, fill: '#a1a1aa' }} />
-                <Tooltip contentStyle={{ backgroundColor: '#000000', border: '1px solid #FF0000', borderRadius: 0, fontSize: '12px' }} />
-                <Bar dataKey="commits" fill="#FF0000" radius={0} />
+                <Tooltip contentStyle={{ backgroundColor: '#000000', border: '1px solid #FF2626', borderRadius: 0, fontSize: '12px' }} />
+                <Bar dataKey="commits" fill="#FF2626" radius={0} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -109,7 +109,7 @@ const Analytics = () => {
                 <CartesianGrid strokeDasharray="3 3" stroke="#000000" />
                 <XAxis dataKey="week" tick={{ fontSize: 10, fill: '#a1a1aa' }} />
                 <YAxis tick={{ fontSize: 10, fill: '#a1a1aa' }} />
-                <Tooltip contentStyle={{ backgroundColor: '#000000', border: '1px solid #FF0000', borderRadius: 0, fontSize: '12px' }} />
+                <Tooltip contentStyle={{ backgroundColor: '#000000', border: '1px solid #FF2626', borderRadius: 0, fontSize: '12px' }} />
                 <Area type="monotone" dataKey="linesAdded" stackId="1" stroke="#39FF14" fill="#39FF14" fillOpacity={0.3} name="Added" />
                 <Area type="monotone" dataKey="linesRemoved" stackId="2" stroke="#ef4444" fill="#ef4444" fillOpacity={0.3} name="Removed" />
                 <Legend wrapperStyle={{ fontSize: '11px' }} />
@@ -126,8 +126,8 @@ const Analytics = () => {
                 <CartesianGrid strokeDasharray="3 3" stroke="#000000" />
                 <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#a1a1aa' }} tickFormatter={(d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />
                 <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#a1a1aa' }} />
-                <Tooltip contentStyle={{ backgroundColor: '#000000', border: '1px solid #FF0000', borderRadius: 0, fontSize: '12px' }} />
-                <Line type="monotone" dataKey="actual" stroke="#FF0000" strokeWidth={2} dot={{ r: 3 }} name="Actual" connectNulls={false} />
+                <Tooltip contentStyle={{ backgroundColor: '#000000', border: '1px solid #FF2626', borderRadius: 0, fontSize: '12px' }} />
+                <Line type="monotone" dataKey="actual" stroke="#FF2626" strokeWidth={2} dot={{ r: 3 }} name="Actual" connectNulls={false} />
                 <Line type="monotone" dataKey="predicted" stroke="#f97316" strokeWidth={2} strokeDasharray="5 5" dot={{ r: 3 }} name="Predicted" connectNulls={false} />
                 <Legend wrapperStyle={{ fontSize: '11px' }} />
               </LineChart>
@@ -143,7 +143,7 @@ const Analytics = () => {
                 <p className="text-sm text-surface-400 mt-1">Current Streak</p>
               </div>
               <div className="text-center">
-                <p className="text-4xl font-bold text-amber-400">{streakData?.longest_streak || 0}</p>
+                <p className="text-4xl font-bold text-white">{streakData?.longest_streak || 0}</p>
                 <p className="text-sm text-surface-400 mt-1">Longest Streak</p>
               </div>
             </div>

@@ -59,33 +59,28 @@ const Sidebar = () => {
 
       <aside className={`
         fixed top-11 left-0 z-50 h-[calc(100dvh-2.75rem)] bg-[#000000]
-        border-r border-red-900/50 flex flex-col transition-all duration-300 ease-in-out rounded-none
+        border-r border-line flex flex-col transition-all duration-300 ease-in-out rounded-none
         ${sidebarOpen ? 'w-64 translate-x-0' : 'w-20 -translate-x-full lg:translate-x-0'}
         lg:sticky lg:top-11 lg:z-auto
       `}>
-        {/* Brand Header with TECHMINES Plasma Logo */}
-        <div className="flex items-center gap-3 px-4 py-5 border-b border-red-900/40 bg-black">
-          <div className="w-10 h-10 bg-black border border-[#FF0000] flex items-center justify-center p-1 shadow-[0_0_12px_rgba(255,0,0,0.5)] flex-shrink-0">
-            <img src="/techmines-logo.jpg" alt="TECHMINES logo" className="w-full h-full object-cover" />
-          </div>
+        {/* Product brand: DevPulse mark + wordmark */}
+        <div className="flex items-center gap-3 px-4 py-5 border-b border-line bg-black">
+          <img src="/logo-mark.svg" alt="DevPulse logo" width={40} height={40} className="w-10 h-10 flex-shrink-0" />
           {sidebarOpen && (
             <motion.div 
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               className="flex flex-col min-w-0"
             >
-              <div className="flex items-center gap-1.5">
-                <span className="font-black text-lg tracking-wider text-white uppercase font-mono">Dev<span className="text-[#FF0000]">Pulse</span></span>
-                <span className="bg-[#FF0000] text-black text-[9px] font-black px-1 py-0.5 tracking-widest uppercase">PLASMA</span>
-              </div>
-              <span className="text-[10px] text-neutral-400 font-mono tracking-tight">Intelligence Engine</span>
+              <span className="font-display font-bold text-xl leading-none tracking-[0.03em] text-white uppercase">Dev<span className="text-[#FF2626]">Pulse</span></span>
+              <span className="mt-1 text-[10px] font-mono font-bold tracking-[0.22em] text-[#FF2626] uppercase">By TECHMINES</span>
             </motion.div>
           )}
         </div>
 
         {/* User Profile Summary */}
-        <div className={`p-3 border-b border-red-950/40 bg-neutral-950/60 ${sidebarOpen ? '' : 'flex justify-center'}`}>
-          <div className={`flex items-center gap-3 p-2 bg-black border border-red-900/30 ${sidebarOpen ? '' : 'w-12 h-12 justify-center'}`}>
+        <div className={`p-3 border-b border-line bg-neutral-950/60 ${sidebarOpen ? '' : 'flex justify-center'}`}>
+          <div className={`flex items-center gap-3 p-2 bg-black border border-line ${sidebarOpen ? '' : 'w-12 h-12 justify-center'}`}>
             <img
               src={user?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username || 'dev'}`}
               alt={user?.username}
@@ -94,7 +89,7 @@ const Sidebar = () => {
             {sidebarOpen && (
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-bold text-white truncate font-mono">{user?.display_name || user?.username || 'Engineer'}</p>
-                <p className="text-[10px] text-[#00FFFF] truncate font-mono">@{user?.username || 'techmine'}</p>
+                <p className="text-[10px] text-white truncate font-mono">@{user?.username || 'techmine'}</p>
               </div>
             )}
           </div>
@@ -114,7 +109,7 @@ const Sidebar = () => {
               <span className="text-lg">{item.icon}</span>
               {sidebarOpen && <span className="text-xs font-bold tracking-wider uppercase font-mono">{item.label}</span>}
               {!sidebarOpen && (
-                <div className="absolute left-16 px-2 py-1 bg-black border border-red-600 text-white text-[10px] uppercase font-mono opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-[0_0_10px_rgba(255,0,0,0.5)]">
+                <div className="absolute left-16 px-2 py-1 bg-black border border-red-600 text-white text-[10px] uppercase font-mono opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-[0_0_10px_rgba(255,38,38,0.5)]">
                   {item.label}
                 </div>
               )}
@@ -123,12 +118,12 @@ const Sidebar = () => {
         </nav>
 
         {/* Footer Actions */}
-        <div className="p-3 border-t border-red-950/60 bg-black space-y-2">
+        <div className="p-3 border-t border-line bg-black space-y-2">
           {/* Quick Nav Hint */}
           {sidebarOpen && (
-            <div className="px-2.5 py-1.5 bg-neutral-950 border border-red-900/30 text-[10px] text-neutral-400 font-mono flex items-center justify-between">
+            <div className="px-2.5 py-1.5 bg-neutral-950 border border-line text-[10px] text-neutral-400 font-mono flex items-center justify-between">
               <span>PALETTE</span>
-              <span className="font-mono bg-red-950/40 text-red-400 border border-red-800/50 px-1">⌘K</span>
+              <span className="font-mono bg-red-950/40 text-red-400 border border-line px-1">⌘K</span>
             </div>
           )}
 
@@ -144,7 +139,7 @@ const Sidebar = () => {
           {/* Collapse Toggle */}
           <button
             onClick={toggleSidebar}
-            className="w-full flex items-center justify-center h-8 hover:bg-red-950/40 text-neutral-500 hover:text-red-400 border border-transparent hover:border-red-900/50 transition-all"
+            className="w-full flex items-center justify-center h-8 hover:bg-red-950/40 text-neutral-500 hover:text-red-400 border border-transparent hover:border-line transition-all"
             aria-label="Toggle Sidebar"
           >
             <span className={`transition-transform duration-300 ${sidebarOpen ? '' : 'rotate-180'}`}>

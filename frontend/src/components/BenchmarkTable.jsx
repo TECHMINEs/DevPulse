@@ -39,7 +39,7 @@ const BenchmarkTable = ({ data = [], currentUser = null }) => {
                   </div>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <span className={`text-sm font-bold ${parseFloat(row.avg_score) >= 70 ? 'text-emerald-400' : parseFloat(row.avg_score) >= 40 ? 'text-amber-400' : 'text-red-400'}`}>
+                  <span className={`text-sm font-bold ${parseFloat(row.avg_score) >= 70 ? 'text-green-400' : parseFloat(row.avg_score) >= 40 ? 'text-white' : 'text-red-400'}`}>
                     {row.avg_score}
                   </span>
                 </td>

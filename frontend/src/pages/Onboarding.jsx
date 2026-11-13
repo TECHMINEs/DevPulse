@@ -43,7 +43,7 @@ const Onboarding = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-surface-950 flex items-center justify-center p-6 animate-fade-in relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-6 animate-fade-in relative overflow-hidden">
       {/* subtle background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary-500/10 rounded-full blur-[120px] pointer-events-none" />
 
@@ -67,7 +67,7 @@ const Onboarding = () => {
               className={`group block p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 relative ${
                 focus === opt.id 
                   ? 'border-primary-500 bg-primary-500/5 shadow-lg shadow-primary-500/10' 
-                  : 'border-surface-800 bg-surface-900/50 hover:border-surface-700'
+                  : 'border-line bg-surface-900/50 hover:border-line'
               }`}
             >
               <div className="flex items-start gap-4">

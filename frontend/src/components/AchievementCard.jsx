@@ -28,7 +28,7 @@ const AchievementCard = ({ achievement, isUnlocked }) => {
               {achievement.name}
             </h4>
             <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border 
-              ${isUnlocked ? 'bg-primary-500/10 text-primary-400 border-primary-500/20' : 'bg-surface-800 text-surface-500 border-surface-700'}`}>
+              ${isUnlocked ? 'bg-primary-500/10 text-primary-400 border-primary-500/20' : 'bg-surface-800 text-surface-500 border-line'}`}>
               {achievement.points} pts
             </span>
           </div>

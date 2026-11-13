@@ -26,7 +26,7 @@ export const formatHourlyData = (data) => {
 
 export const formatLanguageData = (data) => {
   if (!data || !data.length) return [];
-  const colors = ['#FF0000', '#FF5F1F', '#00FFFF', '#FF5F1F', '#f43f5e', '#f97316', '#eab308', '#39FF14', '#14b8a6', '#06b6d4'];
+  const colors = ['#FF2626', '#A9A9A9', '#FFFFFF', '#A9A9A9', '#f43f5e', '#f97316', '#eab308', '#39FF14', '#14b8a6', '#06b6d4'];
   return data.map((d, i) => ({
     name: d.language,
     value: parseInt(d.commit_count),

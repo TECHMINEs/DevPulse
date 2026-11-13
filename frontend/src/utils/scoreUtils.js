@@ -8,7 +8,7 @@ export const getScoreColor = (score) => {
   if (score >= 50) return '#eab308'; // yellow
   if (score >= 40) return '#f97316'; // orange
   if (score >= 30) return '#ef4444'; // red
-  return '#dc2626'; // dark red
+  return '#F5141F'; // dark red
 };
 
 export const getScoreLabel = (score) => {
@@ -39,8 +39,8 @@ export const getHeatmapColor = (count, max) => {
   if (count === 0) return '#000000';
   const intensity = Math.min(count / Math.max(max, 1), 1);
   if (intensity < 0.25) return '#312e81';
-  if (intensity < 0.5) return '#DC2626';
-  if (intensity < 0.75) return '#FF0000';
+  if (intensity < 0.5) return '#F5141F';
+  if (intensity < 0.75) return '#FF2626';
   return '#818cf8';
 };
 
@@ -50,5 +50,5 @@ export const getWellnessHeatmapColor = (score) => {
   if (score >= 60) return '#16a34a';
   if (score >= 40) return '#ca8a04';
   if (score >= 20) return '#ea580c';
-  return '#dc2626';
+  return '#F5141F';
 };

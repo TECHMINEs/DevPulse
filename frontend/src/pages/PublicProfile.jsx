@@ -13,7 +13,7 @@ const PublicProfile = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-surface-950 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-primary-500 rounded-full border-t-transparent animate-spin" />
       </div>
     );
@@ -21,7 +21,7 @@ const PublicProfile = () => {
 
   if (error || !profile) {
     return (
-      <div className="min-h-screen bg-surface-950 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <span className="text-5xl">🔒</span>
           <p className="text-surface-400 mt-4 text-lg">Profile not found or is private</p>
@@ -36,14 +36,14 @@ const PublicProfile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface-950">
+    <div className="min-h-screen">
       {/* Header */}
       <div className="bg-gradient-to-b from-primary-900/30 to-surface-950 pt-12 pb-20">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <img
             src={profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`}
             alt={username}
-            className="w-24 h-24 rounded-full border-4 border-surface-700 mx-auto mb-4 shadow-xl"
+            className="w-24 h-24 rounded-full border-4 border-line mx-auto mb-4 shadow-xl"
           />
           <h1 className="text-3xl font-bold mb-1">{profile.display_name || username}</h1>
           <p className="text-surface-400">@{username}</p>
@@ -84,8 +84,8 @@ const PublicProfile = () => {
               <AreaChart data={profile.wellness_history.map(w => ({ date: w.score_date, score: parseFloat(w.score) }))}>
                 <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#a1a1aa' }} tickFormatter={d => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />
                 <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#a1a1aa' }} />
-                <Tooltip contentStyle={{ backgroundColor: '#000000', border: '1px solid #FF0000', borderRadius: 0, fontSize: '12px' }} />
-                <Area type="monotone" dataKey="score" stroke="#FF0000" fill="#FF000033" />
+                <Tooltip contentStyle={{ backgroundColor: '#000000', border: '1px solid #FF2626', borderRadius: 0, fontSize: '12px' }} />
+                <Area type="monotone" dataKey="score" stroke="#FF2626" fill="#FF000033" />
               </AreaChart>
             </ResponsiveContainer>
           </div>

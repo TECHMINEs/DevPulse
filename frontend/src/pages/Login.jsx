@@ -26,7 +26,7 @@ const Login = () => {
   const API_URL = import.meta.env.VITE_API_URL || '';
 
   return (
-    <div className="min-h-screen bg-surface-950 flex selection:bg-primary-500/30">
+    <div className="min-h-screen flex selection:bg-primary-500/30">
       {/* Animated Background Layers */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary-600/10 blur-[120px] rounded-full animate-float" />
@@ -54,7 +54,7 @@ const Login = () => {
         {/* Branding Section */}
         <div className="hidden lg:flex lg:flex-1 items-center justify-center p-12">
           <div className="max-w-xl">
-            <img src="/techmines-logo.jpg" alt="TECHMINES logo" className="w-24 h-24 object-cover border-2 border-[#FF0000] shadow-[0_0_24px_rgba(255,0,0,0.6)] mb-10 animate-float" />
+            <img src="/logo-mark.svg" alt="DevPulse logo" width={96} height={96} className="w-24 h-24 mb-10 animate-float" />
             <h1 className="text-7xl font-black tracking-tighter mb-6 leading-none">
               Build <span className="gradient-text">Better.</span><br />
               Live <span className="text-white">Well.</span>
@@ -78,7 +78,7 @@ const Login = () => {
           <div className="w-full max-w-md">
             {/* Mobile Header */}
             <div className="lg:hidden text-center mb-10">
-              <img src="/techmines-logo.jpg" alt="TECHMINES logo" className="w-16 h-16 mx-auto object-cover border-2 border-[#FF0000] shadow-[0_0_18px_rgba(255,0,0,0.6)] mb-4" />
+              <img src="/logo-mark.svg" alt="DevPulse logo" width={64} height={64} className="w-16 h-16 mx-auto mb-4" />
               <h1 className="text-4xl font-black text-white">DevPulse</h1>
             </div>
 
@@ -109,7 +109,7 @@ const Login = () => {
             </div>
 
             <p className="mt-10 text-center text-sm text-surface-600">
-              Loved by <span className="text-white font-semibold">1,000+</span> developers worldwide.
+              An open-source project by <span className="text-white font-semibold">TECHMINES</span>.
             </p>
           </div>
         </div>

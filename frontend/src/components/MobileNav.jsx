@@ -20,7 +20,7 @@ const MobileNav = () => {
   return (
   <nav
     className="fixed bottom-0 left-0 right-0 z-50 lg:hidden
-      bg-surface-900/95 backdrop-blur-xl border-t border-surface-800
+      bg-surface-900/95 backdrop-blur-xl border-t border-line
       flex items-center justify-around px-2 pb-safe"
     style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}
   >

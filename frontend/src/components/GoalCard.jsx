@@ -6,7 +6,7 @@ const GoalCard = ({ goal, onDelete }) => {
   const isOverdue = daysLeft === 0 && !goal.is_completed;
 
   return (
-    <div className={`glass-card p-5 ${goal.is_completed ? 'border-emerald-500/30' : ''}`}>
+    <div className={`glass-card p-5 ${goal.is_completed ? 'border-green-500/30' : ''}`}>
       <div className="flex items-start justify-between mb-3">
         <div>
           <h3 className="font-semibold text-sm">{goal.title}</h3>
@@ -35,7 +35,7 @@ const GoalCard = ({ goal, onDelete }) => {
           <div
             className={`h-full rounded-full transition-all duration-500 ${
               goal.is_completed
-                ? 'bg-gradient-to-r from-emerald-500 to-emerald-400'
+                ? 'bg-gradient-to-r from-green-500 to-green-400'
                 : 'bg-gradient-to-r from-primary-500 to-primary-400'
             }`}
             style={{ width: `${Math.min(100, progress)}%` }}
@@ -45,7 +45,7 @@ const GoalCard = ({ goal, onDelete }) => {
 
       <div className="flex items-center justify-between text-xs text-surface-500">
         {goal.is_completed ? (
-          <span className="text-emerald-400">✅ Completed</span>
+          <span className="text-green-400">✅ Completed</span>
         ) : isOverdue ? (
           <span className="text-red-400">⚠️ Overdue</span>
         ) : (

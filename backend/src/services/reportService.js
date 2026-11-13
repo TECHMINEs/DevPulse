@@ -8,14 +8,14 @@ const wellnessService = require('./wellnessService');
 const THEME = {
   background: '#000000',
   surface: '#0A0A0A',
-  red: '#FF0000',
-  orange: '#FF5F1F',
-  cyan: '#00FFFF',
+  red: '#FF2626',
+  orange: '#A9A9A9',
+  cyan: '#FFFFFF',
   green: '#39FF14',
   text: '#FFFFFF',
   muted: '#A3A3A3',
   faint: '#525252',
-  rule: '#7F1D1D',
+  rule: '#2E2E2E',
 };
 
 const PAGE_MARGIN = 50;
