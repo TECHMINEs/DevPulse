@@ -24,10 +24,10 @@ const AdminPanel = () => {
   const jobs = jobsData?.jobs || [];
 
   return (
-    <div className="flex min-h-screen bg-surface-950">
+    <div className="flex min-h-screen">
       <Sidebar />
       <main className="flex-1 overflow-y-auto">
-        <header className="sticky top-11 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-surface-800 px-6 py-4">
+        <header className="sticky top-11 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-line px-6 py-4">
           <h1 className="text-xl font-bold">🛡️ Admin Panel</h1>
           <p className="text-xs text-surface-500">Platform administration</p>
         </header>
@@ -58,15 +58,15 @@ const AdminPanel = () => {
             <h2 className="text-sm font-semibold text-surface-300 mb-4">System Health</h2>
             <div className="grid grid-cols-3 gap-4">
               <div className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full ${stats.services?.database === 'connected' ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                <div className={`w-3 h-3 rounded-full ${stats.services?.database === 'connected' ? 'bg-green-500' : 'bg-red-500'}`} />
                 <span className="text-sm">Database</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full ${stats.services?.redis === 'connected' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                <div className={`w-3 h-3 rounded-full ${stats.services?.redis === 'connected' ? 'bg-green-500' : 'bg-white'}`} />
                 <span className="text-sm">Redis</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full ${stats.services?.ml?.status === 'ok' ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                <div className={`w-3 h-3 rounded-full ${stats.services?.ml?.status === 'ok' ? 'bg-green-500' : 'bg-red-500'}`} />
                 <span className="text-sm">ML Service</span>
               </div>
             </div>
@@ -78,7 +78,7 @@ const AdminPanel = () => {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-surface-700">
+                  <tr className="border-b border-line">
                     <th className="text-left text-xs text-surface-400 py-2 px-3">User</th>
                     <th className="text-left text-xs text-surface-400 py-2 px-3">Email</th>
                     <th className="text-left text-xs text-surface-400 py-2 px-3">Commits</th>
@@ -88,7 +88,7 @@ const AdminPanel = () => {
                 </thead>
                 <tbody>
                   {users.map(u => (
-                    <tr key={u.id} className="border-b border-surface-800 hover:bg-surface-800/50">
+                    <tr key={u.id} className="border-b border-line hover:bg-surface-800/50">
                       <td className="py-3 px-3">
                         <div className="flex items-center gap-2">
                           <img src={u.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.username}`} alt="" className="w-7 h-7 rounded-full" />
@@ -112,7 +112,7 @@ const AdminPanel = () => {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-surface-700">
+                  <tr className="border-b border-line">
                     <th className="text-left text-xs text-surface-400 py-2 px-3">User</th>
                     <th className="text-left text-xs text-surface-400 py-2 px-3">Status</th>
                     <th className="text-left text-xs text-surface-400 py-2 px-3">Repos</th>
@@ -122,7 +122,7 @@ const AdminPanel = () => {
                 </thead>
                 <tbody>
                   {jobs.slice(0, 20).map(j => (
-                    <tr key={j.id} className="border-b border-surface-800">
+                    <tr key={j.id} className="border-b border-line">
                       <td className="py-2 px-3 text-sm">{j.username}</td>
                       <td className="py-2 px-3">
                         <span className={`badge ${j.status === 'completed' ? 'badge-success' : j.status === 'failed' ? 'badge-danger' : 'badge-warning'}`}>

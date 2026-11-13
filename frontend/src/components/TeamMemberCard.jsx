@@ -13,7 +13,7 @@ const TeamMemberCard = ({ member }) => {
             className="w-12 h-12 rounded-xl border border-white/10"
           />
           {isHighRisk && (
-            <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-surface-900 animate-pulse" />
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-line animate-pulse" />
           )}
         </div>
         
@@ -31,7 +31,7 @@ const TeamMemberCard = ({ member }) => {
             {member.role}
           </span>
           {member.latest_score && (
-            <span className={`text-sm font-black ${parseFloat(member.latest_score) >= 70 ? 'text-emerald-400' : isHighRisk ? 'text-red-400' : 'text-amber-400'}`}>
+            <span className={`text-sm font-black ${parseFloat(member.latest_score) >= 70 ? 'text-green-400' : isHighRisk ? 'text-red-400' : 'text-white'}`}>
               {parseFloat(member.latest_score).toFixed(0)}
             </span>
           )}

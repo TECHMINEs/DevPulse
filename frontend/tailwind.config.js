@@ -16,55 +16,30 @@ export default {
     },
     extend: {
       colors: {
+        // TECHMINES portfolio tokens (techmines.github.io)
+        panel: { DEFAULT: '#0E0E0E', 2: '#171717' },
+        line: '#2E2E2E',
+        stroke: '#4D4D4D',
+        dim: '#A9A9A9',
+        body: '#E2E2E2',
         primary: {
-          50: '#fff1f2',
-          100: '#ffe4e6',
-          200: '#fecdd3',
-          300: '#fda4af',
-          400: '#fb7185',
-          500: '#FF0000', // Brightest Red Accent
-          600: '#DC2626',
-          700: '#B91C1C',
-          800: '#991B1B',
-          900: '#7F1D1D',
-          950: '#450A0A',
+          50: '#FFE9E9', 100: '#FFD0D0', 200: '#FFA3A3', 300: '#FF7A7A', 400: '#FF4D4D',
+          500: '#FF2626', 600: '#F5141F', 700: '#C40F18', 800: '#8F0B12', 900: '#5C070B', 950: '#2B0305',
         },
         secondary: {
-          50: '#fff7ed',
-          100: '#ffedd5',
-          200: '#fed7aa',
-          300: '#fdba74',
-          400: '#fb923c',
-          500: '#FF5F1F', // Cyber Orange
-          600: '#EA580C',
-          700: '#C2410C',
-          800: '#9A3412',
-          900: '#7C2D12',
-          950: '#431407',
-        },
-        cyber: {
-          cyan: '#00FFFF',
-          green: '#39FF14',
-          orange: '#FF5F1F',
-          red: '#FF0000',
+          // Neutral partner to the red: the portfolio has no second accent colour
+          50: '#FFFFFF', 100: '#F5F5F5', 200: '#E2E2E2', 300: '#E2E2E2', 400: '#FFFFFF',
+          500: '#E2E2E2', 600: '#A9A9A9', 700: '#4D4D4D', 800: '#2E2E2E', 900: '#171717', 950: '#0E0E0E',
         },
         surface: {
-          50: '#f8fafc',
-          100: '#f1f5f9',
-          200: '#e2e8f0',
-          300: '#cbd5e1',
-          400: '#94a3b8',
-          500: '#64748b',
-          600: '#475569',
-          700: '#1a1a1a',
-          800: '#0d0d0d',
-          900: '#050505',
-          950: '#000000', // Deepest void black
+          50: '#FFFFFF', 100: '#F5F5F5', 200: '#E2E2E2', 300: '#D0D0D0', 400: '#A9A9A9',
+          500: '#8A8A8A', 600: '#6B6B6B', 700: '#171717', 800: '#0E0E0E', 900: '#080808', 950: '#000000',
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+        display: ['"Chakra Petch"', '"Arial Narrow"', 'sans-serif'],
+        sans: ['"IBM Plex Sans"', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'Menlo', 'monospace'],
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-out',
@@ -87,8 +62,8 @@ export default {
           '100%': { opacity: '1', transform: 'translateX(0)' },
         },
         glow: {
-          '0%': { boxShadow: '0 0 15px rgba(255, 0, 0, 0.4)' },
-          '100%': { boxShadow: '0 0 30px rgba(255, 0, 0, 0.8)' },
+          '0%': { boxShadow: '0 0 15px rgba(255, 38, 38, 0.4)' },
+          '100%': { boxShadow: '0 0 30px rgba(255,38,38, 0.8)' },
         },
       },
     },

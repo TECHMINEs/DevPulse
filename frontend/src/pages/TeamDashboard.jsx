@@ -20,10 +20,10 @@ const TeamDashboard = () => {
   const leaderboard = leaderboardData?.leaderboard || [];
 
   return (
-    <div className="flex min-h-screen bg-surface-950">
+    <div className="flex min-h-screen">
       <Sidebar />
       <main className="flex-1 overflow-y-auto">
-        <header className="sticky top-11 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-surface-800 px-6 py-4">
+        <header className="sticky top-11 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-line px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl font-bold">{team?.name || 'Team'}</h1>
@@ -42,8 +42,8 @@ const TeamDashboard = () => {
                 <CartesianGrid strokeDasharray="3 3" stroke="#000000" />
                 <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#a1a1aa' }} tickFormatter={d => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />
                 <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#a1a1aa' }} />
-                <Tooltip contentStyle={{ backgroundColor: '#000000', border: '1px solid #FF0000', borderRadius: 0, fontSize: '12px' }} />
-                <Line type="monotone" dataKey="score" stroke="#FF0000" strokeWidth={2} dot={false} name="Team Avg" />
+                <Tooltip contentStyle={{ backgroundColor: '#000000', border: '1px solid #FF2626', borderRadius: 0, fontSize: '12px' }} />
+                <Line type="monotone" dataKey="score" stroke="#FF2626" strokeWidth={2} dot={false} name="Team Avg" />
               </LineChart>
             </ResponsiveContainer>
           </div>

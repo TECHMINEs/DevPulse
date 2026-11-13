@@ -57,7 +57,7 @@ const WellnessGauge = ({ score = 0, size = 200, showLabel = true }) => {
         color1 = '#f59e0b'; // Amber 500
         color2 = '#fbbf24'; // Amber 400
       } else {
-        color1 = '#FF0000'; // Neon Red
+        color1 = '#FF2626'; // Neon Red
         color2 = '#ff4d71'; // Lighter Neon Red
       }
 
@@ -71,7 +71,7 @@ const WellnessGauge = ({ score = 0, size = 200, showLabel = true }) => {
       ctx.lineCap = 'round';
       ctx.stroke();
 
-      // premium cyber glow effect
+      // soft glow behind the gauge arc
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius, startAngle, scoreAngle);
       ctx.strokeStyle = color1 + '40';

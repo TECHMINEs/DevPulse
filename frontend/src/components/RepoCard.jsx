@@ -36,7 +36,7 @@ const RepoCard = ({ repo }) => {
       <div className="flex items-center justify-between">
         <SparkLine
           data={(repo.velocity || []).map(v => ({ count: parseInt(v.count) || parseInt(v.commits) || 0 }))}
-          color="#FF0000"
+          color="#FF2626"
           width={100}
           height={28}
         />

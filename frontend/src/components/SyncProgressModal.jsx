@@ -16,7 +16,7 @@ const SyncProgressModal = () => {
       <div className="glass-card p-8 max-w-md w-full mx-4 animate-slide-up">
         <div className="text-center mb-6">
           <div className="w-16 h-16 mx-auto mb-4 relative">
-            <div className="w-16 h-16 border-4 border-surface-700 rounded-full"></div>
+            <div className="w-16 h-16 border-4 border-line rounded-full"></div>
             <div className="w-16 h-16 border-4 border-primary-500 rounded-full border-t-transparent animate-spin absolute inset-0"></div>
           </div>
           <h2 className="text-xl font-bold mb-1">Syncing your data</h2>
@@ -33,7 +33,7 @@ const SyncProgressModal = () => {
           </div>
           <div className="h-3 bg-surface-700 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-primary-500 to-orange-500 rounded-full transition-all duration-500"
+              className="h-full bg-gradient-to-r from-primary-500 to-white rounded-full transition-all duration-500"
               style={{ width: `${Math.max(10, progress)}%` }}
             />
           </div>
@@ -51,7 +51,7 @@ const SyncProgressModal = () => {
         {syncProgress.commitsFound > 0 && (
           <div className="text-center mt-3">
             <p className="text-xs text-surface-500">
-              Found <span className="text-emerald-400 font-semibold">{syncProgress.commitsFound}</span> commits so far
+              Found <span className="text-green-400 font-semibold">{syncProgress.commitsFound}</span> commits so far
             </p>
           </div>
         )}

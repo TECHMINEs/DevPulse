@@ -22,10 +22,10 @@ const Achievements = () => {
   const earned = achievements.filter(a => a.earned_at);
 
   return (
-    <div className="flex min-h-screen bg-surface-950">
+    <div className="flex min-h-screen">
       <Sidebar />
       <main className="flex-1 overflow-y-auto">
-        <header className="sticky top-11 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-surface-800 px-6 py-4">
+        <header className="sticky top-11 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-line px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl font-bold">Achievements</h1>

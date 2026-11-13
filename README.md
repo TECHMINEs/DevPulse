@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="frontend/public/techmines-logo.jpg" alt="TECHMINES" width="96" />
+<a href="https://techmines.github.io/"><img src="frontend/public/logo-lockup.svg" alt="DevPulse by TECHMINES" height="84" /></a>
 
 # DevPulse
 

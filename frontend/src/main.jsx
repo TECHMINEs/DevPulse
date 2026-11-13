@@ -35,12 +35,12 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             style: {
               background: '#000000',
               color: '#FFFFFF',
-              border: '1px solid rgba(255,0,51,0.2)',
+              border: '1px solid rgba(255,38,38,0.2)',
               borderRadius: 0,
               backdropFilter: 'blur(12px)',
             },
             success: {
-              iconTheme: { primary: '#FF0000', secondary: '#FFFFFF' },
+              iconTheme: { primary: '#FF2626', secondary: '#FFFFFF' },
             },
             error: {
               iconTheme: { primary: '#ef4444', secondary: '#FFFFFF' },

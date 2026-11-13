@@ -64,7 +64,7 @@ const Dashboard = () => {
 
   if (profileError) {
     return (
-      <div className="flex min-h-screen bg-surface-950">
+      <div className="flex min-h-screen">
         <Sidebar />
         <main className="flex-1 p-6 flex items-center justify-center">
           <div className="glass-card p-8 text-center">
@@ -82,7 +82,7 @@ const Dashboard = () => {
 
   if (profileLoading) {
     return (
-      <div className="flex min-h-screen bg-surface-950">
+      <div className="flex min-h-screen">
         <Sidebar />
         <main className="flex-1 p-6 space-y-6">
           <div className="h-16 bg-surface-800/60 rounded-2xl animate-pulse" />
@@ -99,12 +99,12 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-surface-950">
+    <div className="flex min-h-screen">
       <Sidebar />
 
       <main className="flex-1 overflow-y-auto">
         {/* Top bar */}
-        <header className="sticky top-11 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-surface-800 px-6 py-4">
+        <header className="sticky top-11 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-line px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl font-bold">
@@ -183,7 +183,7 @@ const Dashboard = () => {
               value={`${nightCommitPct.toFixed(0)}%`}
               label="Night Commits"
               icon={nightCommitPct > 30 ? '⚠️' : '🌙'}
-              className={nightCommitPct > 30 ? 'border-amber-500/30' : ''}
+              className={nightCommitPct > 30 ? 'border-stroke' : ''}
             />
           </div>
 
@@ -196,20 +196,20 @@ const Dashboard = () => {
                 <AreaChart data={wellnessChart} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
                   <defs>
                     <linearGradient id="wellnessGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#FF0000" stopOpacity={0.3} />
-                      <stop offset="100%" stopColor="#FF0000" stopOpacity={0} />
+                      <stop offset="0%" stopColor="#FF2626" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="#FF2626" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#000000" />
                   <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#a1a1aa' }} tickFormatter={(d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} interval="preserveStartEnd" />
                   <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#a1a1aa' }} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#000000', border: '1px solid #FF0000', borderRadius: 0, fontSize: '12px' }}
+                    contentStyle={{ backgroundColor: '#000000', border: '1px solid #FF2626', borderRadius: 0, fontSize: '12px' }}
                     labelStyle={{ color: '#A3A3A3' }}
                     formatter={(value) => [`${value.toFixed(1)}`, 'Score']}
                     labelFormatter={(d) => new Date(d).toLocaleDateString()}
                   />
-                  <Area type="monotone" dataKey="score" stroke="#FF0000" strokeWidth={2} fill="url(#wellnessGrad)" dot={false} activeDot={{ r: 4, fill: '#FF0000' }} />
+                  <Area type="monotone" dataKey="score" stroke="#FF2626" strokeWidth={2} fill="url(#wellnessGrad)" dot={false} activeDot={{ r: 4, fill: '#FF2626' }} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -232,12 +232,12 @@ const Dashboard = () => {
                   <XAxis dataKey="label" tick={{ fontSize: 9, fill: '#a1a1aa' }} interval={2} />
                   <YAxis tick={{ fontSize: 10, fill: '#a1a1aa' }} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#000000', border: '1px solid #FF0000', borderRadius: 0, fontSize: '12px' }}
+                    contentStyle={{ backgroundColor: '#000000', border: '1px solid #FF2626', borderRadius: 0, fontSize: '12px' }}
                     formatter={(value) => [value, 'Commits']}
                   />
                   <Bar dataKey="count" radius={0}>
                     {hourlyChart.map((entry, i) => (
-                      <Cell key={i} fill={entry.hourNum >= 0 && entry.hourNum < 5 ? '#ef4444' : entry.hourNum >= 9 && entry.hourNum <= 17 ? '#FF0000' : '#DC2626'} />
+                      <Cell key={i} fill={entry.hourNum >= 0 && entry.hourNum < 5 ? '#ef4444' : entry.hourNum >= 9 && entry.hourNum <= 17 ? '#FF2626' : '#F5141F'} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -265,7 +265,7 @@ const Dashboard = () => {
                       ))}
                     </Pie>
                     <Tooltip
-                      contentStyle={{ backgroundColor: '#000000', border: '1px solid #FF0000', borderRadius: 0, fontSize: '12px' }}
+                      contentStyle={{ backgroundColor: '#000000', border: '1px solid #FF2626', borderRadius: 0, fontSize: '12px' }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -298,7 +298,7 @@ const Dashboard = () => {
                       <span className="text-xs text-surface-500">{repo.commit_count} commits</span>
                       <SparkLine
                         data={(repo.velocity || []).map(v => ({ count: parseInt(v.count) }))}
-                        color="#FF0000"
+                        color="#FF2626"
                         width={80}
                         height={24}
                       />
