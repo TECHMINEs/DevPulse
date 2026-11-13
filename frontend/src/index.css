@@ -2,11 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* @techmines:start — managed by TECHMINES-Brand. Update with `node techmines.mjs sync`; edits between these markers are overwritten. */
 /* ============================================================================
    TECHMINES shared theme — mirrors the portfolio at techmines.github.io (dark).
    Black, white and greys with ONE red. Chakra Petch / IBM Plex Sans / JetBrains Mono.
-   Source of truth: brand/tm-theme.css in the workspace. Edit there, then copy the
-   block into each project so all five stay identical.
+   Managed by TECHMINES-Brand: colours and fonts live in theme/tokens.json, the rules
+   in theme/tm-theme.css. Edit there, then run `node techmines.mjs sync`; never edit
+   this block inside a project, because sync overwrites it.
    ============================================================================ */
 
 :root {
@@ -24,7 +26,7 @@
   --tm-on-red:    #000000;
   --tm-green:     #39FF14;
   --tm-grid:      rgba(255, 255, 255, 0.07);
-  --tm-glow:      rgba(255, 38, 38, 0.55);
+  --tm-glow:      color-mix(in srgb, var(--tm-red) 55%, transparent);
   --tm-lift:      0 0 0 1px var(--tm-red), 0 18px 50px -12px var(--tm-glow);
 
   --tm-font-display: 'Chakra Petch', 'Arial Narrow', sans-serif;
@@ -42,7 +44,7 @@
   border-radius: 0 !important;
 }
 
-html {
+html:root {
   background: var(--tm-bg);
 }
 
@@ -113,8 +115,8 @@ body::before {
 
 body::after {
   background:
-    radial-gradient(42vw 42vw at 112% -8%, rgba(255, 38, 38, 0.34), transparent 70%),
-    radial-gradient(42vw 42vw at -14% 108%, rgba(245, 20, 31, 0.30), transparent 70%);
+    radial-gradient(42vw 42vw at 112% -8%, color-mix(in srgb, var(--tm-red) 34%, transparent), transparent 70%),
+    radial-gradient(42vw 42vw at -14% 108%, color-mix(in srgb, var(--tm-red-2) 30%, transparent), transparent 70%);
   animation: tm-drift 18s ease-in-out infinite alternate;
 }
 
@@ -224,6 +226,7 @@ body::after {
   content: " \2197";
   color: var(--tm-red);
 }
+/* @techmines:end */
 
 /* ---------------------------------------------------------------------------
    DevPulse components, expressed with the shared TECHMINES tokens above
