@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: devpulse-api
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    plan: starter
+    disk:
+      name: devpulse-db
+      mountPath: /app/backend/data
+      sizeGB: 1
+    envVars:
+      - key: PORT
+        value: 5001
+      - key: NODE_ENV
+        value: production
+      - key: ML_SERVICE_URL
+        fromService:
+          type: web
+          name: devpulse-ml
+          property: host
+
+  - type: web
+    name: devpulse-ml
+    env: python
+    rootDir: ml-service
+    buildCommand: pip install -r requirements.txt && python train.py
+    startCommand: uvicorn main:app --host 0.0.0.0 --port 8000
+    plan: starter
+
+  - type: web
+    name: devpulse-web
+    env: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: devpulse-api
+          property: host
