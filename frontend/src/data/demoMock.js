@@ -16,7 +16,7 @@ const getDemoUser = () => ({
   email: 'pranavjmit@gmail.com',
   role: 'admin',
   created_at: '2026-04-12T00:54:26Z',
-  onboarding_completed: getOnboardedState(),
+  onboarding_completed: true,
 });
 
 export const demoMock = {

@@ -36,7 +36,12 @@ const Dashboard = () => {
 
   const dash = { profile, wellness: wellnessData, commits: commitData, hourly: hourlyData, languages: langData, repos: topReposData, achievements: achievementsData, streak: streakData };
 
-  if (dash && profile && !profile.onboarding_completed) {
+  const isCompleted =
+    profile?.onboarding_completed ||
+    user?.onboarding_completed ||
+    (typeof localStorage !== 'undefined' && localStorage.getItem('devpulse_onboarded') !== 'false');
+
+  if (profile && !isCompleted) {
     return <Navigate to="/onboarding" replace />;
   }
 

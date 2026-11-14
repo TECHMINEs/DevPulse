@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import useStore from '../store/useStore';
@@ -9,8 +9,18 @@ const Onboarding = () => {
   const [focus, setFocus] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const updateUser = useStore(s => s.updateUser);
+  const user = useStore((s) => s.user);
+  const updateUser = useStore((s) => s.updateUser);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const isCompleted =
+      user?.onboarding_completed ||
+      (typeof localStorage !== 'undefined' && localStorage.getItem('devpulse_onboarded') === 'true');
+    if (isCompleted) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async () => {
     if (!focus) return;
@@ -22,7 +32,11 @@ const Onboarding = () => {
       } catch {}
       await client.post('/api/user/onboarding', { focus }).catch(() => ({}));
       updateUser({ onboarding_completed: true, focus });
-      // Refresh the cached profile so the dashboard does not bounce back here
+      queryClient.setQueryData(['profile'], (old) => ({
+        ...(old || {}),
+        onboarding_completed: true,
+        focus,
+      }));
       await queryClient.invalidateQueries({ queryKey: ['profile'] });
       navigate('/dashboard', { replace: true });
     } catch (error) {
