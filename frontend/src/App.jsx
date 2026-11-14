@@ -21,6 +21,8 @@ import Onboarding from './pages/Onboarding';
 import CommandPalette from './components/CommandPalette';
 import NavigationProgress from './components/NavigationProgress';
 import MobileNav from './components/MobileNav';
+import { isStaticDemo } from './api/client';
+import { getDemoUser } from './data/demoMock';
 
 import { useEffect } from 'react';
 import BrandBar from './components/brand/BrandBar';
@@ -68,6 +70,13 @@ const AdminRoute = ({ children }) => {
 
 function App() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const state = useStore.getState();
+    if (isStaticDemo && state.user && state.user.id !== 'illustrative-developer') {
+      state.setAuth('demo-token', getDemoUser());
+    }
+  }, []);
 
   useEffect(() => {
     // CRIT-12: use navigate() instead of window.location.href to avoid full

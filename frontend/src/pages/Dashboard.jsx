@@ -16,6 +16,7 @@ import { getTopRepos } from '../api/repos';
 import { formatWellnessData, formatHourlyData, formatLanguageData } from '../utils/chartHelpers';
 import { getGreeting, formatTimeAgo } from '../utils/dateUtils';
 import { getScoreColor } from '../utils/scoreUtils';
+import { isStaticDemo } from '../api/client';
 
 const Dashboard = () => {
   const user = useStore((s) => s.user);
@@ -34,12 +35,10 @@ const Dashboard = () => {
   const { data: achievementsData } = useQuery({ queryKey: ['achievements'], queryFn: getAchievements });
   const { data: streakData } = useQuery({ queryKey: ['streak'], queryFn: getStreak });
 
-  const dash = { profile, wellness: wellnessData, commits: commitData, hourly: hourlyData, languages: langData, repos: topReposData, achievements: achievementsData, streak: streakData };
-
   const isCompleted =
     profile?.onboarding_completed ||
     user?.onboarding_completed ||
-    (typeof localStorage !== 'undefined' && localStorage.getItem('devpulse_onboarded') !== 'false');
+    (typeof localStorage !== 'undefined' && localStorage.getItem('devpulse_onboarded') === 'true');
 
   if (profile && !isCompleted) {
     return <Navigate to="/onboarding" replace />;
@@ -56,7 +55,8 @@ const Dashboard = () => {
   const thisWeekCommits = (commitData?.commits || []).filter((c) => {
     const d = new Date(c.date);
     const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
+    weekAgo.setDate(weekAgo.getDate() - 6);
+    weekAgo.setHours(0, 0, 0, 0);
     return d >= weekAgo;
   }).reduce((sum, c) => sum + parseInt(c.count), 0) || 0;
 
@@ -109,20 +109,22 @@ const Dashboard = () => {
 
       <main className="flex-1 overflow-y-auto">
         {/* Top bar */}
-        <header className="sticky top-11 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-line px-6 py-4">
-          <div className="flex items-center justify-between">
+        <header className="sticky top-11 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-line px-4 sm:px-6 py-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h1 className="text-xl font-bold">
                 {getGreeting()}, <span className="gradient-text">{profile?.display_name || user?.username || 'Developer'}</span>
               </h1>
               <p className="text-xs text-surface-500 mt-0.5">
-                {profile?.last_synced_at
+                {isStaticDemo
+                  ? 'Illustrative activity · no live GitHub connection'
+                  : profile?.last_synced_at
                   ? `Last synced ${formatTimeAgo(profile.last_synced_at)}`
                   : 'Never synced — click Sync Now to get started'
                 }
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            {!isStaticDemo && <div className="flex items-center gap-3">
               <button
                 onClick={() => triggerSync()}
                 disabled={isTriggering || isSyncing}
@@ -137,11 +139,19 @@ const Dashboard = () => {
                   <>🔄 Sync Now</>
                 )}
               </button>
-            </div>
+            </div>}
           </div>
         </header>
 
-        <div className="p-6 space-y-6 animate-fade-in">
+        <div className="w-full max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6 animate-fade-in">
+          {isStaticDemo && (
+            <div className="glass-card p-5 sm:p-6 border-l-4 border-l-primary-500">
+              <p className="text-xs font-mono uppercase tracking-widest text-primary-400 mb-2">Interactive sample</p>
+              <p className="text-sm sm:text-base text-surface-300 leading-relaxed">
+                Explore a sample developer&apos;s 12-week activity, wellness patterns, repositories, and goals. All values are illustrative; GitHub sync and server predictions are unavailable on GitHub Pages.
+              </p>
+            </div>
+          )}
           {/* Low wellness alert */}
           {currentScore > 0 && currentScore < 40 && (
             <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-center gap-3 animate-slide-up">
@@ -192,11 +202,20 @@ const Dashboard = () => {
             />
           </div>
 
+          {isStaticDemo && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="glass-card p-5"><p className="text-xs font-mono uppercase text-primary-400 mb-2">Pattern</p><p className="text-sm text-surface-300">The sample wellness score rises to {currentScore.toFixed(0)} / 100 over the latest 21 days.</p></div>
+              <div className="glass-card p-5"><p className="text-xs font-mono uppercase text-primary-400 mb-2">Rhythm</p><p className="text-sm text-surface-300">{thisWeekCommits} sample commits in the last seven days, with {nightCommitPct.toFixed(0)}% occurring at night.</p></div>
+              <div className="glass-card p-5"><p className="text-xs font-mono uppercase text-primary-400 mb-2">Explore next</p><p className="text-sm text-surface-300">Open Analytics for a 12-week trend and an illustrative comparison baseline.</p></div>
+            </div>
+          )}
+
           {/* Row 2: Wellness timeline + Commit heatmap */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 2xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] gap-6">
             {/* Wellness Timeline */}
             <div className="glass-card p-6">
-              <h2 className="text-sm font-semibold text-surface-300 mb-4">Wellness Timeline (90 days)</h2>
+              <h2 className="text-base font-semibold text-surface-300 mb-1">Wellness Timeline</h2>
+              <p className="text-xs text-surface-500 mb-4">{isStaticDemo ? '21 sample days · score out of 100' : 'Last 90 days · score out of 100'}</p>
               <ResponsiveContainer width="100%" height={220}>
                 <AreaChart data={wellnessChart} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
                   <defs>
@@ -221,7 +240,8 @@ const Dashboard = () => {
 
             {/* Commit Heatmap */}
             <div className="glass-card p-6">
-              <h2 className="text-sm font-semibold text-surface-300 mb-4">Contribution Activity</h2>
+              <h2 className="text-base font-semibold text-surface-300 mb-1">Contribution Activity</h2>
+              <p className="text-xs text-surface-500 mb-4">{isStaticDemo ? 'Illustrative commit calendar' : 'Commit calendar'}</p>
               <CommitHeatmap data={commitData?.commits || []} />
             </div>
           </div>
@@ -252,8 +272,8 @@ const Dashboard = () => {
             {/* Language Distribution */}
             <div className="glass-card p-6">
               <h2 className="text-sm font-semibold text-surface-300 mb-4">Language Distribution</h2>
-              <div className="flex items-center gap-6">
-                <ResponsiveContainer width="50%" height={200}>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+                <ResponsiveContainer width="100%" height={200} className="sm:max-w-[50%]">
                   <PieChart>
                     <Pie
                       data={languageChart}
@@ -290,7 +310,7 @@ const Dashboard = () => {
           {/* Row 4: Top Repos */}
           {topReposData?.repos?.length > 0 && (
             <div>
-              <h2 className="text-sm font-semibold text-surface-300 mb-3">Top Repositories This Month</h2>
+              <h2 className="text-base font-semibold text-surface-300 mb-3">Top Repositories This Month</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {topReposData.repos.map((repo) => (
                   <div key={repo.id} className="glass-card-hover p-5">

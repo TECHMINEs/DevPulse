@@ -4,6 +4,7 @@ import confetti from 'canvas-confetti';
 import { io } from 'socket.io-client';
 import useStore from '../store/useStore';
 import toast from 'react-hot-toast';
+import { isStaticDemo } from '../api/client';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || '';
 
@@ -18,6 +19,7 @@ export const useSocket = () => {
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    if (isStaticDemo) return undefined;
     // connect using httpOnly cookie
     const socket = io(SOCKET_URL, {
       withCredentials: true,

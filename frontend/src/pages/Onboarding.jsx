@@ -4,6 +4,7 @@ import client from '../api/client';
 import useStore from '../store/useStore';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { isStaticDemo } from '../api/client';
 
 const Onboarding = () => {
   const [focus, setFocus] = useState('');
@@ -26,11 +27,13 @@ const Onboarding = () => {
     if (!focus) return;
     setLoading(true);
     try {
+      await client.post('/api/user/onboarding', { focus });
       try {
         localStorage.setItem('devpulse_onboarded', 'true');
         localStorage.setItem('devpulse_focus', focus);
-      } catch {}
-      await client.post('/api/user/onboarding', { focus }).catch(() => ({}));
+      } catch {
+        // Continue with the current session when browser storage is unavailable.
+      }
       updateUser({ onboarding_completed: true, focus });
       queryClient.setQueryData(['profile'], (old) => ({
         ...(old || {}),
@@ -74,7 +77,9 @@ const Onboarding = () => {
         </div>
 
         <p className="text-surface-400 mb-8 leading-relaxed">
-          Let&apos;s personalize your DevPulse experience. What is your primary focus for this quarter?
+          {isStaticDemo
+            ? 'Choose a focus to explore illustrative insights. This saves a preference in your browser only.'
+            : 'Let\'s personalize your DevPulse experience. What is your primary focus for this quarter?'}
         </p>
         
         <div className="space-y-4 mb-8">
@@ -135,7 +140,7 @@ const Onboarding = () => {
         </button>
         
         <p className="text-center text-[10px] text-surface-600 mt-6 tracking-widest uppercase">
-          DevPulse Security Layer v1.0.4
+          {isStaticDemo ? 'Illustrative browser demo · no GitHub sync' : 'DevPulse Security Layer v1.0.4'}
         </p>
       </div>
     </div>

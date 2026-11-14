@@ -30,7 +30,9 @@ const useStore = create(
         user: { ...user, onboarding_completed: user?.onboarding_completed ?? true },
       }),
       clearAuth: () => {
-        try { localStorage.removeItem('devpulse_onboarded'); } catch {}
+        try { localStorage.removeItem('devpulse_onboarded'); } catch {
+          // A blocked storage API should not prevent logout.
+        }
         set({ token: null, memoryToken: null, user: null });
       },
       updateUser: (updates) => set((state) => {
@@ -38,7 +40,9 @@ const useStore = create(
         if (updates.onboarding_completed !== undefined) {
           try {
             localStorage.setItem('devpulse_onboarded', updates.onboarding_completed ? 'true' : 'false');
-          } catch {}
+          } catch {
+            // The in-memory user state still records the preference.
+          }
         }
         return { user: nextUser };
       }),

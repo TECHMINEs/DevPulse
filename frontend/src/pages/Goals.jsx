@@ -6,6 +6,7 @@ import { getGoals, createGoal, deleteGoal } from '../api/analytics';
 import toast from 'react-hot-toast';
 import SkeletonBox from '../components/SkeletonBox';
 import EmptyState from '../components/EmptyState';
+import { isStaticDemo } from '../api/client';
 
 const Goals = () => {
   const queryClient = useQueryClient();
@@ -65,13 +66,14 @@ const Goals = () => {
               <h1 className="text-xl font-bold">Goals</h1>
               <p className="text-xs text-surface-500">{stats.completionRate || 0}% completion rate</p>
             </div>
-            <button onClick={() => setShowForm(!showForm)} className="btn-primary text-sm">
+            {!isStaticDemo && <button onClick={() => setShowForm(!showForm)} className="btn-primary text-sm">
               {showForm ? '✕ Cancel' : '+ New Goal'}
-            </button>
+            </button>}
           </div>
         </header>
 
         <div className="p-6 space-y-6 animate-fade-in">
+          {isStaticDemo && <p className="glass-card p-4 text-sm text-surface-300 border-l-4 border-l-primary-500">These sample goals illustrate how progress is tracked. Creating and saving goals requires the full app.</p>}
           {isLoading ? (
             <div className="space-y-6">
               <SkeletonBox h="150px" />

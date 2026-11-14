@@ -35,9 +35,6 @@ jobs:
 
       - name: Build
         run: npm run build
-        env:
-          VITE_API_URL: https://devpulse-api.onrender.com
-          VITE_SOCKET_URL: https://devpulse-api.onrender.com
 
   # ============================================================================
   # Backend: Lint + Basic checks

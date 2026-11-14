@@ -2,7 +2,7 @@ import axios from 'axios';
 import useStore from '../store/useStore';
 import { demoMock } from '../data/demoMock';
 
-const isStaticDemo = typeof window !== 'undefined' && (
+export const isStaticDemo = typeof window !== 'undefined' && (
   window.location.hostname.includes('github.io') ||
   window.location.pathname.startsWith('/DevPulse') ||
   import.meta.env.VITE_DEMO_MODE === 'true'
@@ -36,7 +36,9 @@ function resolveDemo(url) {
   if (clean.startsWith('api/user/onboarding')) {
     try {
       localStorage.setItem('devpulse_onboarded', 'true');
-    } catch {}
+    } catch {
+      // Browsers with restricted storage can still use the in-memory demo.
+    }
     return { success: true, onboarding_completed: true };
   }
   if (clean.startsWith('api/admin/verify')) {
@@ -91,6 +93,9 @@ function resolveDemo(url) {
   if (clean.startsWith('api/goals')) {
     return demoMock.getGoals();
   }
+  if (clean.startsWith('api/sync/trigger')) {
+    return { error: 'GitHub sync is unavailable in the browser demo.' };
+  }
   if (clean.startsWith('api/sync/history')) {
     return [];
   }
@@ -123,7 +128,7 @@ client.interceptors.response.use(
     return response;
   },
   async (error) => {
-    if (isStaticDemo || !error.response || error.code === 'ERR_NETWORK') {
+    if (isStaticDemo) {
       const demoData = resolveDemo(error.config?.url || '');
       return {
         data: demoData,

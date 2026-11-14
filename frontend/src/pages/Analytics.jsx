@@ -6,10 +6,19 @@ import {
   ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend
 } from 'recharts';
 import Sidebar from '../components/Sidebar';
-import BenchmarkTable from '../components/BenchmarkTable';
 import { getRadar, getBenchmark, getVelocity, getPredictions, getStreak } from '../api/analytics';
 import { formatRadarData, formatVelocityData, formatWellnessData } from '../utils/chartHelpers';
 import SkeletonBox from '../components/SkeletonBox';
+import { isStaticDemo } from '../api/client';
+
+const benchmarkRows = [
+  ['Commits per week', 'commits_per_week', (v) => Number(v || 0).toFixed(0)],
+  ['Average message length', 'avg_commit_message_length', (v) => `${Number(v || 0).toFixed(0)} characters`],
+  ['Night commits', 'night_commit_pct', (v) => `${(Number(v || 0) * 100).toFixed(0)}%`],
+  ['Weekend commits', 'weekend_commit_pct', (v) => `${(Number(v || 0) * 100).toFixed(0)}%`],
+  ['Active repositories', 'repos_active', (v) => Number(v || 0).toFixed(0)],
+  ['Average wellness score', 'avg_wellness_score', (v) => `${Number(v || 0).toFixed(0)} / 100`],
+];
 
 const Analytics = () => {
   const { data: radarData, isLoading: radarLoading } = useQuery({ queryKey: ['radar'], queryFn: getRadar });
@@ -43,12 +52,13 @@ const Analytics = () => {
       <Sidebar />
 
       <main className="flex-1 overflow-y-auto">
-        <header className="sticky top-11 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-line px-6 py-4">
+        <header className="sticky top-11 z-30 bg-surface-950/80 backdrop-blur-xl border-b border-line px-4 sm:px-6 py-5">
           <h1 className="text-xl font-bold">Deep Analytics</h1>
-          <p className="text-xs text-surface-500">Comprehensive analysis of your development patterns</p>
+          <p className="text-xs text-surface-500">{isStaticDemo ? 'Illustrative work-pattern insights · no live GitHub sync' : 'Comprehensive analysis of your development patterns'}</p>
         </header>
 
-        <div className="p-6 space-y-6 animate-fade-in">
+        <div className="w-full max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6 animate-fade-in">
+          {isStaticDemo && <p className="glass-card p-4 text-sm text-surface-300 border-l-4 border-l-primary-500">These charts show a fictional sample developer. The comparison baseline and forecast are illustrative, not measured industry data or an ML result.</p>}
           {isLoading ? (
             <div className="space-y-6">
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -71,7 +81,7 @@ const Analytics = () => {
                   <PolarAngleAxis dataKey="dimension" tick={{ fontSize: 11, fill: '#A3A3A3' }} />
                   <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 9, fill: '#a1a1aa' }} />
                   <Radar name="You" dataKey="user" stroke="#FF2626" fill="#FF2626" fillOpacity={0.3} strokeWidth={2} />
-                  <Radar name="Industry Avg" dataKey="benchmark" stroke="#a1a1aa" fill="#a1a1aa" fillOpacity={0.1} strokeWidth={1} strokeDasharray="5 5" />
+                  <Radar name={isStaticDemo ? 'Sample reference' : 'Reference'} dataKey="benchmark" stroke="#a1a1aa" fill="#a1a1aa" fillOpacity={0.1} strokeWidth={1} strokeDasharray="5 5" />
                   <Legend
                     wrapperStyle={{ fontSize: '11px', color: '#A3A3A3' }}
                   />
@@ -82,8 +92,16 @@ const Analytics = () => {
 
             {/* Benchmark table */}
             <div className="glass-card p-6">
-              <h2 className="text-sm font-semibold text-surface-300 mb-4">You vs Industry Average</h2>
-              <BenchmarkTable user={benchmarkData?.user} industry={benchmarkData?.industry} />
+              <h2 className="text-base font-semibold text-surface-300 mb-2">Pattern Comparison</h2>
+              <p className="text-xs text-surface-500 mb-4">{isStaticDemo ? 'Sample developer vs illustrative reference' : 'Your metrics vs reference values'}</p>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[420px] text-sm">
+                  <thead><tr className="border-b border-line text-surface-500"><th className="py-2 text-left">Metric</th><th className="py-2 text-right">Developer</th><th className="py-2 text-right">Reference</th></tr></thead>
+                  <tbody>{benchmarkRows.map(([label, key, format]) => (
+                    <tr key={key} className="border-b border-line/50"><th scope="row" className="py-3 text-left font-normal text-surface-300">{label}</th><td className="py-3 text-right font-mono text-white">{format(benchmarkData?.user?.[key])}</td><td className="py-3 text-right font-mono text-surface-400">{format(benchmarkData?.industry?.[key])}</td></tr>
+                  ))}</tbody>
+                </table>
+              </div>
             </div>
           </div>
 
@@ -119,8 +137,8 @@ const Analytics = () => {
 
           {/* ML Predictions */}
           <div className="glass-card p-6">
-            <h2 className="text-sm font-semibold text-surface-300 mb-1">ML Wellness Predictions</h2>
-            <p className="text-xs text-surface-500 mb-4">7-day forecast based on your recent patterns (powered by scikit-learn)</p>
+            <h2 className="text-sm font-semibold text-surface-300 mb-1">{isStaticDemo ? 'Illustrative Wellness Forecast' : 'ML Wellness Predictions'}</h2>
+            <p className="text-xs text-surface-500 mb-4">{isStaticDemo ? 'A sample seven-day scenario, not a live model prediction or health assessment.' : '7-day forecast based on your recent patterns (powered by scikit-learn)'}</p>
             <ResponsiveContainer width="100%" height={250}>
               <LineChart data={combinedPrediction} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#000000" />

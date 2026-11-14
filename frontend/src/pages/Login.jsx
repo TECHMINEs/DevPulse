@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
+import { getDemoUser } from '../data/demoMock';
+import { isStaticDemo } from '../api/client';
 
 const Login = () => {
   const token = useStore((s) => s.token);
@@ -23,8 +25,8 @@ const Login = () => {
     }));
   }, []);
 
-  const API_URL = import.meta.env.VITE_API_URL || '';
   const base = import.meta.env.BASE_URL || '/';
+  const API_URL = import.meta.env.VITE_API_URL || '';
 
   return (
     <div className="min-h-screen flex selection:bg-primary-500/30">
@@ -93,26 +95,24 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    useStore.getState().setAuth('demo-token', {
-                      id: '32c0b8ac235c37e1f444449e71c3febf',
-                      username: 'TECHMINEs',
-                      display_name: 'Pranav J',
-                      email: 'pranavjmit@gmail.com',
-                      role: 'admin',
-                      onboarding_completed: true,
-                    });
-                    navigate('/dashboard');
+                    if (!isStaticDemo) {
+                      window.location.assign(`${API_URL}/auth/github`);
+                      return;
+                    }
+                    const demoUser = getDemoUser();
+                    useStore.getState().setAuth('demo-token', demoUser);
+                    navigate(isStaticDemo && !demoUser.onboarding_completed ? '/onboarding' : '/dashboard');
                   }}
                   className="btn-primary w-full py-4 text-base font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-primary-500/20"
                 >
-                  <span>✦ Explore Interactive Browser Demo</span>
+                  <span>{isStaticDemo ? '✦ Explore Interactive Browser Demo' : 'Connect with GitHub'}</span>
                 </button>
               </div>
 
               <div className="mt-8 text-center">
                 <p className="text-xs text-surface-600 leading-relaxed">
-                  Client-side interactive demo with bundled developer work-pattern intelligence.<br />
-                  <span className="text-surface-400">No account or server connection required.</span>
+                  {isStaticDemo ? 'Illustrative developer data generated for this browser demo.' : 'Connect your GitHub account to analyze your activity.'}<br />
+                  {isStaticDemo && <span className="text-surface-400">No GitHub connection, live sync, or server analysis.</span>}
                 </p>
               </div>
             </div>
