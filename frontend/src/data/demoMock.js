@@ -1,6 +1,14 @@
 import { SAMPLE_DATA } from './sampleData';
 
-const demoUser = {
+const getOnboardedState = () => {
+  try {
+    return localStorage.getItem('devpulse_onboarded') !== 'false';
+  } catch {
+    return true;
+  }
+};
+
+const getDemoUser = () => ({
   id: '32c0b8ac235c37e1f444449e71c3febf',
   username: 'TECHMINEs',
   display_name: 'Pranav J',
@@ -8,13 +16,16 @@ const demoUser = {
   email: 'pranavjmit@gmail.com',
   role: 'admin',
   created_at: '2026-04-12T00:54:26Z',
-};
+  onboarding_completed: getOnboardedState(),
+});
 
 export const demoMock = {
-  user: demoUser,
+  get user() {
+    return getDemoUser();
+  },
 
   getMe() {
-    return { user: demoUser, token: 'demo-session-token' };
+    return { user: getDemoUser(), token: 'demo-session-token' };
   },
 
   getDashboardData() {

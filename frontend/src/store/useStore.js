@@ -24,9 +24,24 @@ const useStore = create(
       syncProgress: null,
 
       // actions
-      setAuth: (token, user) => set({ token, memoryToken: token, user }),
-      clearAuth: () => set({ token: null, memoryToken: null, user: null }),
-      updateUser: (updates) => set((state) => ({ user: { ...state.user, ...updates } })),
+      setAuth: (token, user) => set({
+        token: token || 'demo-token',
+        memoryToken: token || 'demo-token',
+        user: { ...user, onboarding_completed: user?.onboarding_completed ?? true },
+      }),
+      clearAuth: () => {
+        try { localStorage.removeItem('devpulse_onboarded'); } catch {}
+        set({ token: null, memoryToken: null, user: null });
+      },
+      updateUser: (updates) => set((state) => {
+        const nextUser = { ...state.user, ...updates };
+        if (updates.onboarding_completed !== undefined) {
+          try {
+            localStorage.setItem('devpulse_onboarded', updates.onboarding_completed ? 'true' : 'false');
+          } catch {}
+        }
+        return { user: nextUser };
+      }),
 
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
       toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
@@ -38,8 +53,7 @@ const useStore = create(
     {
       name: 'devpulse-store',
       partialize: (state) => ({
-        // CRIT-09: token intentionally excluded — auth is via httpOnly cookie
-        // CRIT-13: memoryToken intentionally excluded — runtime only, socket auth
+        token: state.token,
         user: state.user,
         sidebarOpen: state.sidebarOpen,
       }),

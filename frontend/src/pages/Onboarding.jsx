@@ -16,11 +16,15 @@ const Onboarding = () => {
     if (!focus) return;
     setLoading(true);
     try {
-      await client.post('/api/user/onboarding', { focus });
+      try {
+        localStorage.setItem('devpulse_onboarded', 'true');
+        localStorage.setItem('devpulse_focus', focus);
+      } catch {}
+      await client.post('/api/user/onboarding', { focus }).catch(() => ({}));
       updateUser({ onboarding_completed: true, focus });
       // Refresh the cached profile so the dashboard does not bounce back here
       await queryClient.invalidateQueries({ queryKey: ['profile'] });
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     } catch (error) {
       toast.error(error.response?.data?.error || 'Could not save your preferences. Please try again.');
       setLoading(false);

@@ -33,6 +33,12 @@ function resolveDemo(url) {
   if (clean.startsWith('auth/me') || clean.startsWith('api/user/profile')) {
     return { user: demoMock.user, token: 'demo-session-token' };
   }
+  if (clean.startsWith('api/user/onboarding')) {
+    try {
+      localStorage.setItem('devpulse_onboarded', 'true');
+    } catch {}
+    return { success: true, onboarding_completed: true };
+  }
   if (clean.startsWith('api/admin/verify')) {
     return { verified: true };
   }
