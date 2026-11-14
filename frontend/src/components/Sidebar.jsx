@@ -65,7 +65,7 @@ const Sidebar = () => {
       `}>
         {/* Product brand: DevPulse mark + wordmark */}
         <div className="flex items-center gap-3 px-4 py-5 border-b border-line bg-black">
-          <img src="/logo-mark.svg" alt="DevPulse logo" width={40} height={40} className="w-10 h-10 flex-shrink-0" />
+          <img src={`${import.meta.env.BASE_URL}logo-mark.svg`} alt="DevPulse logo" width={40} height={40} className="w-10 h-10 flex-shrink-0" />
           {sidebarOpen && (
             <motion.div 
               initial={{ opacity: 0, x: -10 }}
