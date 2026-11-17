@@ -1,4 +1,3 @@
-import React from 'react';
 import SparkLine from './SparkLine';
 import { useNavigate } from 'react-router-dom';
 

@@ -1,4 +1,3 @@
-import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
@@ -34,14 +33,13 @@ const Analytics = () => {
     : [];
   const velocityChart = formatVelocityData(velocityData?.velocity || []);
 
-  // combine actual + predicted wellness data for the chart
+  // Actual and predicted wellness share one series for the chart.
   const actualWellness = formatWellnessData(predictionsData?.actual || []);
   const predictedWellness = (predictionsData?.predictions || []).map(p => ({
     date: p.date,
     predicted: p.score ? parseFloat(p.score) : null,
   }));
 
-  // merge actual and predicted into one array for the chart
   const combinedPrediction = [
     ...actualWellness.map(d => ({ date: d.date, actual: d.score, predicted: null })),
     ...predictedWellness.map(d => ({ ...d, actual: null })),

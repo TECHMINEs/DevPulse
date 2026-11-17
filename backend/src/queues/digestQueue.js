@@ -1,5 +1,4 @@
 const logger = require('../utils/logger');
-// Mocking Bull queue completely in-memory
 class InMemoryQueue {
   constructor(name) {
     this.name = name;

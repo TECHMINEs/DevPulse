@@ -1,4 +1,3 @@
-import React from 'react';
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 
 const SparkLine = ({ data = [], dataKey = 'count', color = '#FF2626', width = 100, height = 32 }) => {

@@ -6,7 +6,6 @@ const logger = require('../utils/logger');
 let dbInstance = null;
 let initPromise = null;
 
-// Initialize the database connection with a singleton promise lock
 const initDB = async () => {
   if (dbInstance) return dbInstance;
   
@@ -19,7 +18,6 @@ const initDB = async () => {
 
       logger.info('Connected to SQLite database');
       
-      // Enable foreign keys
       await db.run('PRAGMA foreign_keys = ON');
       
       dbInstance = db;
@@ -44,7 +42,7 @@ const query = async (text, params = []) => {
   const sqliteText = mapQuery(text);
   
   try {
-    // QUAL-06: case-insensitive RETURNING detection
+    // case-insensitive RETURNING detection
     const upperSql = sqliteText.trim().toUpperCase();
     const isSelect = upperSql.startsWith('SELECT');
     const hasReturning = upperSql.includes('RETURNING');
@@ -57,7 +55,6 @@ const query = async (text, params = []) => {
       }
       return { rows, rowCount: rows.length };
     } else {
-      // For INSERT, UPDATE, DELETE without RETURNING
       const result = await db.run(sqliteText, params);
       const duration = Date.now() - start;
       if (duration > 200 && process.env.NODE_ENV !== 'production') {
@@ -72,7 +69,7 @@ const query = async (text, params = []) => {
 };
 
 /**
- * CRIT-06: Real SQLite transaction support via getClient().
+ * Real SQLite transaction support via getClient().
  * Callers use: BEGIN / COMMIT / ROLLBACK as query text to control the transaction.
  * On failure, call client.query('ROLLBACK') before releasing.
  */
@@ -83,7 +80,6 @@ const getClient = async () => {
       const sqliteText = mapQuery(text);
       const upper = sqliteText.trim().toUpperCase();
 
-      // Intercept transaction control statements
       if (upper === 'BEGIN') {
         await db.run('BEGIN');
         return { rows: [], rowCount: 0 };
@@ -97,7 +93,6 @@ const getClient = async () => {
         return { rows: [], rowCount: 0 };
       }
 
-      // Regular queries — same routing as query()
       const upperSql = sqliteText.trim().toUpperCase();
       if (upperSql.startsWith('SELECT') || upperSql.includes('RETURNING')) {
         const rows = await db.all(sqliteText, params);

@@ -1,4 +1,3 @@
-import React from 'react';
 
 const TeamMemberCard = ({ member }) => {
   const isHighRisk = member.risk_flag === 'high';

@@ -3,8 +3,6 @@ const db = require('../db/pool');
 const logger = require('../utils/logger');
 const { encrypt } = require('../utils/crypto');
 
-// took me a while to figure out passport-github2 vs passport-github — use v2
-// v1 doesn't handle the scope properly for newer GitHub API versions
 module.exports = function(passport) {
   passport.serializeUser((user, done) => {
     done(null, user.id);
@@ -12,7 +10,7 @@ module.exports = function(passport) {
 
   passport.deserializeUser(async (id, done) => {
     try {
-      // CRIT-10: never load access_token into req.user — use explicit columns
+      // never load access_token into req.user — use explicit columns
       const result = await db.query(
         `SELECT id, github_id, gitlab_id, username, display_name, email,
           avatar_url, bio, location, company, provider, role, focus,
@@ -28,7 +26,6 @@ module.exports = function(passport) {
     }
   });
 
-  // GitHub OAuth Strategy
   if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
     passport.use(new GitHubStrategy({
       clientID: process.env.GITHUB_CLIENT_ID,

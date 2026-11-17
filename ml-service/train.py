@@ -70,7 +70,6 @@ def generate_synthetic_data(n_samples=1000):
             files_per_commit = np.random.normal(12, 5)
             score = np.random.uniform(0, 39)
 
-        # clamp values to valid ranges
         avg_commit_hour = np.clip(avg_commit_hour % 24, 0, 23.99)
         night_commit_pct = np.clip(night_commit_pct, 0, 1)
         weekend_commit_pct = np.clip(weekend_commit_pct, 0, 1)
@@ -81,7 +80,6 @@ def generate_synthetic_data(n_samples=1000):
         files_per_commit = np.clip(files_per_commit, 0, 50)
         score = np.clip(score, 0, 100)
 
-        # derive risk label from score
         if score >= 70:
             risk_flag = 'none'
         elif score >= 40:
@@ -107,11 +105,11 @@ def generate_synthetic_data(n_samples=1000):
 
 def train_models():
     """Train classifier and regressor models."""
-    print("🔧 Generating synthetic training data...")
+    print("Generating synthetic training data")
     df = generate_synthetic_data(1000)
 
-    print(f"📊 Dataset shape: {df.shape}")
-    print(f"📊 Risk flag distribution:\n{df['risk_flag'].value_counts()}")
+    print(f"Dataset shape: {df.shape}")
+    print(f"Risk flag distribution:\n{df['risk_flag'].value_counts()}")
     print()
 
     feature_cols = [
@@ -124,19 +122,14 @@ def train_models():
     y_class = df['risk_flag'].values
     y_score = df['score'].values
 
-    # split data
     X_train, X_test, y_class_train, y_class_test, y_score_train, y_score_test = \
         train_test_split(X, y_class, y_score, test_size=0.2, random_state=42, stratify=y_class)
 
-    # scale features
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
 
-    # ========================================================================
-    # Train classifier (risk flag prediction)
-    # ========================================================================
-    print("🌲 Training RandomForestClassifier...")
+    print("Training RandomForestClassifier")
     classifier = RandomForestClassifier(
         n_estimators=200,
         max_depth=8,
@@ -146,33 +139,25 @@ def train_models():
     )
     classifier.fit(X_train_scaled, y_class_train)
 
-    # evaluate classifier
     y_pred_class = classifier.predict(X_test_scaled)
     accuracy = accuracy_score(y_class_test, y_pred_class)
-    print(f"✅ Classifier accuracy: {accuracy:.4f}")
+    print(f"Classifier accuracy: {accuracy:.4f}")
     print("\nClassification Report:")
     print(classification_report(y_class_test, y_pred_class))
 
-    # feature importance
     importances = dict(zip(feature_cols, classifier.feature_importances_.tolist()))
-    print("📈 Feature importance:")
+    print("Feature importance:")
     for feat, imp in sorted(importances.items(), key=lambda x: -x[1]):
         print(f"  {feat}: {imp:.4f}")
 
-    # ========================================================================
-    # Train regressor (score prediction)
-    # ========================================================================
-    print("\n📈 Training Ridge Regressor...")
+    print("\nTraining Ridge regressor")
     regressor = Ridge(alpha=1.0)
     regressor.fit(X_train_scaled, y_score_train)
 
     y_pred_score = regressor.predict(X_test_scaled)
     rmse = np.sqrt(mean_squared_error(y_score_test, y_pred_score))
-    print(f"✅ Regressor RMSE: {rmse:.4f}")
+    print(f"Regressor RMSE: {rmse:.4f}")
 
-    # ========================================================================
-    # Save models
-    # ========================================================================
     model_dir = os.path.dirname(os.path.abspath(__file__))
 
     joblib.dump({
@@ -206,10 +191,7 @@ def train_models():
     with open(os.path.join(model_dir, 'model_info.json'), 'w') as f:
         json.dump(model_info, f, indent=2)
 
-    print("\n✅ Models saved successfully!")
-    print(f"  📁 model_classifier.pkl")
-    print(f"  📁 model_regressor.pkl")
-    print(f"  📁 model_info.json")
+    print("\nSaved model_classifier.pkl, model_regressor.pkl and model_info.json")
 
 
 if __name__ == '__main__':

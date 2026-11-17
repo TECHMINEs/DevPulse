@@ -19,11 +19,9 @@ router.get('/', authenticate, async (req, res) => {
       ORDER BY is_completed ASC, end_date ASC
     `, [req.user.id]);
 
-    // separate active and completed
     const active = result.rows.filter(g => !g.is_completed);
     const completed = result.rows.filter(g => g.is_completed);
 
-    // calculate completion rate
     const total = result.rows.length;
     const completedCount = completed.length;
     const completionRate = total > 0 ? (completedCount / total * 100).toFixed(1) : 0;

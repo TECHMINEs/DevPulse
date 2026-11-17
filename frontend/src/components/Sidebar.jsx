@@ -35,8 +35,8 @@ const Sidebar = () => {
   const handleLogout = async () => {
     try {
       await client.post('/auth/logout');
-    } catch (_) {
-      // best-effort
+    } catch {
+      // best-effort: the local session is cleared either way
     } finally {
       clearAuth();
       navigate('/login');

@@ -1,10 +1,9 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { format, subDays, startOfWeek, addDays } from 'date-fns';
 import { getHeatmapColor } from '../utils/scoreUtils';
 
 const CommitHeatmap = ({ data = [], days = 365 }) => {
   const heatmapData = useMemo(() => {
-    // create a map of date -> count
     const countMap = {};
     let maxCount = 0;
 
@@ -14,7 +13,6 @@ const CommitHeatmap = ({ data = [], days = 365 }) => {
       maxCount = Math.max(maxCount, countMap[dateStr]);
     });
 
-    // generate 52 weeks of data
     const today = new Date();
     const weeks = [];
     let currentDate = startOfWeek(subDays(today, days - 1), { weekStartsOn: 0 });

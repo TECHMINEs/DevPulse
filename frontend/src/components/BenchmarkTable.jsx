@@ -1,4 +1,3 @@
-import React from 'react';
 
 const BenchmarkTable = ({ data = [], currentUser = null }) => {
   return (

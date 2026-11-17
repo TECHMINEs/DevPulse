@@ -9,7 +9,7 @@ const logger = require('../utils/logger');
  * @swagger
  * /api/admin/verify:
  *   get:
- *     summary: Verify admin access server-side (CRIT-14)
+ *     summary: Verify admin access server-side
  *     tags: [Admin]
  */
 router.get('/verify', authenticate, adminOnly, (req, res) => {
@@ -33,10 +33,8 @@ router.get('/stats', authenticate, adminOnly, async (req, res) => {
       FROM commit_snapshots
       WHERE committed_at >= date('now')
     `);
-    // check service health
     const mlHealth = await mlService.healthCheck();
 
-    // Redis connection status
     let redisStatus = 'disconnected';
     try {
       const { redis } = require('../services/githubService');

@@ -5,7 +5,6 @@ const { authenticate } = require('../middleware/auth');
 const { validateTeam } = require('../middleware/validate');
 const logger = require('../utils/logger');
 
-// generate URL-friendly slug from team name
 const generateSlug = (name) => {
   return name.toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
@@ -29,7 +28,6 @@ router.post('/', authenticate, validateTeam, async (req, res) => {
     try {
       await client.query('BEGIN');
 
-      // create team
       const teamResult = await client.query(`
         INSERT INTO teams (name, slug, description, owner_id)
         VALUES ($1, $2, $3, $4)
@@ -79,7 +77,6 @@ router.get('/:slug', authenticate, async (req, res) => {
 
     const team = teamResult.rows[0];
 
-    // check membership
     const memberCheck = await db.query(
       'SELECT * FROM team_members WHERE team_id = $1 AND user_id = $2',
       [team.id, req.user.id]
@@ -100,7 +97,6 @@ router.get('/:slug', authenticate, async (req, res) => {
       ORDER BY tm.role = 'admin' DESC, tm.joined_at ASC
     `, [team.id]);
 
-    // aggregate wellness
     const aggregateResult = await db.query(`
       SELECT ws.score_date, AVG(ws.score) as avg_score
       FROM wellness_scores ws
@@ -140,18 +136,14 @@ router.post('/:slug/invite', authenticate, async (req, res) => {
       [teamResult.rows[0].id, req.user.id]
     );
 
-    // also check if user is the owner
     if (memberCheck.rows.length === 0 && teamResult.rows[0].owner_id !== req.user.id) {
       return res.status(403).json({ error: 'Only admins can invite members' });
     }
 
-    // generate invite token (simple approach)
-    // revisit this when team mode has more users
     const inviteToken = crypto.randomBytes(16).toString('hex');
     const inviteUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/teams/${req.params.slug}/join?token=${inviteToken}`;
 
-    // store the token temporarily (in practice, you'd want a separate invite table)
-    // for now, we just use the slug as the invite mechanism
+    // Joining only needs the team slug; the token is not checked.
     res.json({ inviteUrl, token: inviteToken });
   } catch (error) {
     logger.error('Invite error', { error: error.message });
@@ -171,7 +163,6 @@ router.post('/:slug/join', authenticate, async (req, res) => {
     const teamResult = await db.query('SELECT * FROM teams WHERE slug = $1', [req.params.slug]);
     if (teamResult.rows.length === 0) return res.status(404).json({ error: 'Team not found' });
 
-    // check if already a member
     const existing = await db.query(
       'SELECT * FROM team_members WHERE team_id = $1 AND user_id = $2',
       [teamResult.rows[0].id, req.user.id]
@@ -186,7 +177,7 @@ router.post('/:slug/join', authenticate, async (req, res) => {
       VALUES ($1, $2, 'member')
     `, [teamResult.rows[0].id, req.user.id]);
 
-    if (insertResult.rowCount === 0) { // BUG-09: add guard
+    if (insertResult.rowCount === 0) { // add guard
       return res.status(500).json({ error: 'Failed to join team' });
     }
 
@@ -219,7 +210,7 @@ router.delete('/:slug/leave', authenticate, async (req, res) => {
       [teamResult.rows[0].id, req.user.id]
     );
 
-    if (deleteResult.rowCount === 0) { // BUG-10: add guard
+    if (deleteResult.rowCount === 0) { // add guard
       return res.status(404).json({ error: 'You are not a member of this team' });
     }
 
@@ -285,8 +276,6 @@ router.get('/:slug/insights', authenticate, async (req, res) => {
     const teamResult = await db.query('SELECT * FROM teams WHERE slug = $1', [req.params.slug]);
     if (teamResult.rows.length === 0) return res.status(404).json({ error: 'Team not found' });
 
-    // aggregate stats
-    // revisit this when team mode has more users — the aggregate query might be slow
     const statsResult = await db.query(`
       SELECT
         COUNT(DISTINCT tm.user_id) as member_count,
@@ -298,7 +287,6 @@ router.get('/:slug/insights', authenticate, async (req, res) => {
       WHERE tm.team_id = $1
     `, [teamResult.rows[0].id]);
 
-    // team wellness timeline
     const timelineResult = await db.query(`
       SELECT ws.score_date, AVG(ws.score) as avg_score, COUNT(DISTINCT ws.user_id) as active_members
       FROM wellness_scores ws
@@ -308,7 +296,6 @@ router.get('/:slug/insights', authenticate, async (req, res) => {
       ORDER BY ws.score_date ASC
     `, [teamResult.rows[0].id]);
 
-    // member heatmap data
     const heatmapResult = await db.query(`
       SELECT u.username, ws.score_date, ws.score
       FROM team_members tm

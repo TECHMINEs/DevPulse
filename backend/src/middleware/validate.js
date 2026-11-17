@@ -1,6 +1,5 @@
 const { body, param, validationResult } = require('express-validator');
 
-// centralized validation error handler
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -12,7 +11,6 @@ const handleValidationErrors = (req, res, next) => {
   next();
 };
 
-// reusable validation chains
 const validateGoal = [
   body('title').trim().notEmpty().withMessage('Title is required').isLength({ max: 200 }),
   body('goal_type').trim().notEmpty().withMessage('Goal type is required')
@@ -42,7 +40,7 @@ const validateSettings = [
   body('alert_threshold').optional().isInt({ min: 0, max: 100 }),
   body('alert_email').optional().isEmail().withMessage('Must be a valid email'),
   body('is_public_profile').optional().isBoolean(),
-  // SEC-04: validate Slack webhook URL to prevent SSRF via arbitrary webhook destinations
+  // validate Slack webhook URL to prevent SSRF via arbitrary webhook destinations
   body('slack_webhook_url')
     .optional()
     .trim()

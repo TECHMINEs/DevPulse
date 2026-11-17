@@ -2,7 +2,7 @@ const axios = require('axios');
 const logger = require('../utils/logger');
 
 /**
- * FEAT-02: Slack Notification Service
+ * Slack Notification Service
  * Handles sending formatted alerts to user-provided Slack webhooks.
  */
 class SlackService {

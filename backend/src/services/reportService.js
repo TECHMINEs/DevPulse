@@ -2,9 +2,6 @@ const PDFDocument = require('pdfkit');
 const db = require('../db/pool');
 const wellnessService = require('./wellnessService');
 
-// ============================================================================
-// Sharp Edged Plasma PDF theme
-// ============================================================================
 const THEME = {
   background: '#000000',
   surface: '#0A0A0A',
@@ -136,9 +133,6 @@ const averageScore = (rows) => (rows.length > 0
   ? (rows.reduce((sum, w) => sum + parseFloat(w.score), 0) / rows.length).toFixed(1)
   : 'N/A');
 
-// ============================================================================
-// Weekly report
-// ============================================================================
 const generateWeeklyReport = async (userId) => {
   const user = await getReportUser(userId);
   const wellness = await wellnessService.getWellnessHistory(userId, 7);
@@ -207,9 +201,6 @@ const generateWeeklyReport = async (userId) => {
   return doc;
 };
 
-// ============================================================================
-// Monthly report
-// ============================================================================
 const generateMonthlyReport = async (userId, year, month) => {
   const user = await getReportUser(userId);
   const startDate = new Date(year, month - 1, 1);

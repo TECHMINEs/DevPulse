@@ -2,7 +2,6 @@ const nodemailer = require('nodemailer');
 const handlebars = require('handlebars');
 const logger = require('../utils/logger');
 
-// create transporter — using gmail for dev, should switch to SendGrid for prod
 const createTransporter = () => {
   if (!process.env.SMTP_HOST) {
     logger.warn('Email not configured — SMTP_HOST missing');
@@ -20,8 +19,7 @@ const createTransporter = () => {
   });
 };
 
-// weekly digest email template
-// email template broken on gmail, had to inline all css
+// Weekly digest. Styles are inlined for Gmail.
 const digestTemplate = handlebars.compile(`
 <!DOCTYPE html>
 <html>
@@ -125,7 +123,6 @@ const digestTemplate = handlebars.compile(`
 </html>
 `);
 
-// send weekly digest email
 const sendWeeklyDigest = async (recipientEmail, data) => {
   const transporter = createTransporter();
   if (!transporter) {
@@ -155,7 +152,6 @@ const sendWeeklyDigest = async (recipientEmail, data) => {
   }
 };
 
-// send alert email when wellness drops below threshold
 const sendAlertEmail = async (recipientEmail, data) => {
   const transporter = createTransporter();
   if (!transporter) return false;

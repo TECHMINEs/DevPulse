@@ -56,7 +56,7 @@ router.get('/github/callback',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
 
-      // redirect to frontend — cookie is already set, no token in URL (CRIT-07)
+      // redirect to frontend — cookie is already set, no token in URL
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
       res.redirect(`${frontendUrl}/login/callback`);
     } catch (error) {
@@ -104,7 +104,7 @@ router.post('/logout', authenticate, async (req, res) => {
  *         description: Not authenticated
  */
 router.get('/me', authenticate, (req, res) => {
-  // don't send access_token back to the client, that would be bad
+  // OAuth tokens never leave the server.
   const { access_token, gitlab_access_token, ...safeUser } = req.user;
   res.json({ user: safeUser });
 });
@@ -135,7 +135,6 @@ router.get('/users/search', authenticate, async (req, res) => {
       return res.json({ users: [] });
     }
 
-    // Explicitly exclude sensitive tokens and passwords
     const result = await query(`
       SELECT id, username, display_name, avatar_url 
       FROM users 

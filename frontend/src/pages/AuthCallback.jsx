@@ -1,15 +1,10 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
 import client from '../api/client';
 
-/**
- * AuthCallback — CRIT-08
- * No longer decodes JWT from URL (which was leaking tokens and returning a
- * minimal user object missing avatar/display_name/email).
- * Instead: the backend sets an httpOnly cookie, we call /auth/me to get the
- * full user object, then navigate to the dashboard.
- */
+// The backend has already set the httpOnly session cookie; fetch the user from
+// /auth/me and continue to the dashboard. No token ever travels in the URL.
 const AuthCallback = () => {
   const navigate = useNavigate();
   const setAuth = useStore((s) => s.setAuth);

@@ -1,4 +1,3 @@
-import React from 'react';
 
 const SkeletonBox = ({ h = '128px', w = '100%', className = '' }) => (
   <div 

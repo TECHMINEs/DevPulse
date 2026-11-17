@@ -8,8 +8,7 @@ import { isStaticDemo } from '../api/client';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || '';
 
-// Socket.io React hook — this was tricky to get right
-// CRIT-13: reads memoryToken (non-persisted) instead of token to avoid
+// reads memoryToken (non-persisted) instead of token to avoid
 // localStorage exposure while still authenticating the WebSocket connection.
 export const useSocket = () => {
   const socketRef = useRef(null);

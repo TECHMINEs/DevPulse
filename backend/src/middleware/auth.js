@@ -4,7 +4,7 @@ const logger = require('../utils/logger');
 
 const { LRUCache } = require('lru-cache');
 
-// PERF-02: Use industry-standard lru-cache instead of hand-rolled Map
+// Use industry-standard lru-cache instead of hand-rolled Map
 const _userCache = new LRUCache({
   max: 500,
   ttl: 30 * 1000, // 30 seconds
@@ -18,7 +18,7 @@ const _setCache = (userId, tokenVersion, user) => {
   _userCache.set(`${userId}:${tokenVersion}`, user);
 };
 
-// JWT auth middleware — checks both Authorization header and httpOnly cookie
+// JWT auth from the Authorization header or the httpOnly cookie.
 const authenticate = async (req, res, next) => {
   try {
     let token = null;
@@ -61,7 +61,6 @@ const authenticate = async (req, res, next) => {
       return res.status(401).json({ error: 'Token revoked' });
     }
 
-    // store in cache and proceed
     _setCache(decoded.userId, decoded.token_version, result.rows[0]);
     req.user = result.rows[0];
     next();

@@ -17,7 +17,7 @@ const { rateLimitMiddleware, syncRateLimiter } = require('../middleware/rateLimi
  */
 router.post('/trigger', authenticate, rateLimitMiddleware(syncRateLimiter), async (req, res) => {
   try {
-    // SEC-03: enforce 10-minute cooldown per user regardless of rate limiter
+    // enforce 10-minute cooldown per user regardless of rate limiter
     const lastSyncResult = await db.query(
       'SELECT last_synced_at FROM users WHERE id = $1',
       [req.user.id]
@@ -34,7 +34,7 @@ router.post('/trigger', authenticate, rateLimitMiddleware(syncRateLimiter), asyn
       }
     }
 
-    // SEC-05: verify the access token exists (don't pass it in job data)
+    // verify the access token exists (don't pass it in job data)
     const tokenCheck = await db.query(
       'SELECT id FROM users WHERE id = $1 AND access_token IS NOT NULL',
       [req.user.id]
@@ -43,7 +43,7 @@ router.post('/trigger', authenticate, rateLimitMiddleware(syncRateLimiter), asyn
       return res.status(400).json({ error: 'No access token found. Please re-authenticate.' });
     }
 
-    // SEC-05: only userId in job data — worker fetches access_token itself
+    // only userId in job data — worker fetches access_token itself
     const job = await syncQueue.add('sync-github', {
       userId: req.user.id,
     }, {

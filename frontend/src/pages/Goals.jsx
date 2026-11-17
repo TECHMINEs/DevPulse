@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Sidebar from '../components/Sidebar';
 import GoalCard from '../components/GoalCard';
@@ -39,12 +39,12 @@ const Goals = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // QUAL-01: target value validation
+    // target value validation
     if (parseFloat(form.target_value) < 0) {
       return toast.error('Target value cannot be negative');
     }
 
-    // QUAL-04: date validation
+    // date validation
     if (new Date(form.end_date) < new Date(form.start_date)) {
       return toast.error('End date cannot be before start date');
     }

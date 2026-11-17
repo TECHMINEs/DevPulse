@@ -1,11 +1,9 @@
-import React from 'react';
 import useCountUp from '../hooks/useCountUp';
 
 const StatCard = ({ value, label, icon, trend, trendLabel, className = '' }) => {
   const isPositive = trend > 0;
   const isNeutral = trend === 0 || trend === undefined || trend === null;
-  // If value is a string (e.g. '12 days', '35%'), we don't animate it with useCountUp to avoid parsing issues,
-  // or we just render it directly. The previous implementation just animated value ?? 0, which breaks on strings.
+  // Only plain numbers count up; strings like '12 days' render as they are.
   const isNumeric = typeof value === 'number' || (typeof value === 'string' && !isNaN(Number(value)));
   const animatedValue = useCountUp(isNumeric ? Number(value) : 0, 900);
   

@@ -79,7 +79,6 @@ router.get('/top', authenticate, async (req, res) => {
  */
 router.get('/:repoId', authenticate, async (req, res) => {
   try {
-    // repo info
     const repoResult = await db.query(`
       SELECT * FROM repositories WHERE id = $1 AND user_id = $2
     `, [req.params.repoId, req.user.id]);
@@ -99,7 +98,6 @@ router.get('/:repoId', authenticate, async (req, res) => {
       ORDER BY date ASC
     `, [req.params.repoId]);
 
-    // hourly distribution
     const hourlyResult = await db.query(`
       SELECT hour_of_day as hour, COUNT(*) as count
       FROM commit_snapshots

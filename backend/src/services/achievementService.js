@@ -1,13 +1,10 @@
 const db = require('../db/pool');
 const logger = require('../utils/logger');
 
-// check and award achievements for a user
-// this runs after every sync — might want to debounce it later
 const checkAndAwardAchievements = async (userId, io = null) => {
   const newlyEarned = [];
 
   try {
-    // get all achievements and which ones user already has
     const achievementsResult = await db.query(`
       SELECT a.*, ua.earned_at
       FROM achievements a
@@ -20,7 +17,6 @@ const checkAndAwardAchievements = async (userId, io = null) => {
     for (const achievement of unearned) {
       const earned = await checkAchievement(userId, achievement.slug);
       if (earned) {
-        // award it
         await db.query(`
           INSERT INTO user_achievements (user_id, achievement_id)
           VALUES ($1, $2)
@@ -54,8 +50,7 @@ const checkAndAwardAchievements = async (userId, io = null) => {
   return newlyEarned;
 };
 
-// individual achievement check functions
-// each returns true if the user qualifies
+// Achievement checks: each returns true when the user qualifies.
 const checkAchievement = async (userId, slug) => {
   switch (slug) {
     case 'first_sync':
@@ -193,7 +188,6 @@ const checkTeamPlayer = async (userId) => {
   return parseInt(result.rows[0].count) >= 1;
 };
 
-// get all achievements with user's earned status
 const getUserAchievements = async (userId) => {
   const result = await db.query(`
     SELECT a.*, ua.earned_at
@@ -204,7 +198,6 @@ const getUserAchievements = async (userId) => {
   return result.rows;
 };
 
-// get only earned achievements
 const getEarnedAchievements = async (userId) => {
   const result = await db.query(`
     SELECT a.*, ua.earned_at
@@ -216,7 +209,6 @@ const getEarnedAchievements = async (userId) => {
   return result.rows;
 };
 
-// get total points
 const getTotalPoints = async (userId) => {
   const result = await db.query(`
     SELECT COALESCE(SUM(a.points), 0) as total

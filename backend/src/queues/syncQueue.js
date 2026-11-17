@@ -1,9 +1,7 @@
 const logger = require('../utils/logger');
 
 /**
- * In-memory job queue — replaces Bull for environments without Redis.
- * Fixed: CRIT-03 (getJob/getState/progress), QUAL-03 (3-arg process API),
- * QUAL-10 (waitForIdle for graceful shutdown).
+ * In-memory, Bull-compatible job queue, so the app runs without Redis.
  */
 class InMemoryQueue {
   constructor(name) {
@@ -17,7 +15,7 @@ class InMemoryQueue {
 
   /**
    * Bull-compatible: process(name, fn) or process(name, concurrency, fn) or process(fn)
-   * QUAL-03: handle all three call signatures
+   * handle all three call signatures
    */
   process(nameOrFn, concurrencyOrFn, fn) {
     if (typeof nameOrFn === 'function') {
@@ -56,7 +54,7 @@ class InMemoryQueue {
   }
 
   /**
-   * CRIT-03: Retrieve a job by ID so status polling works.
+   * Retrieve a job by ID so status polling works.
    */
   getJob(id) {
     const meta = this.jobs.get(String(id));
@@ -92,7 +90,6 @@ class InMemoryQueue {
     } catch (error) {
       logger.error(`Job failed in ${this.name}`, { id: job.id, error: error.message });
       if (meta) { meta.state = 'failed'; meta.failedReason = error.message; }
-      // Basic retry
       if (!job.opts.attempt) job.opts.attempt = 1;
       if (job.opts.attempt < (job.opts.attempts || 3)) {
         job.opts.attempt += 1;
@@ -108,7 +105,7 @@ class InMemoryQueue {
   }
 
   /**
-   * QUAL-10: Wait for current job to finish before shutdown.
+   * Wait for current job to finish before shutdown.
    */
   waitForIdle() {
     return new Promise((resolve) => {

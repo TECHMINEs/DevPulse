@@ -2,10 +2,10 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 /**
- * CRIT-09: token is NO LONGER persisted to localStorage.
+ * token is NO LONGER persisted to localStorage.
  * Auth is handled by the httpOnly cookie set by the backend.
  *
- * CRIT-13: memoryToken is kept in runtime state (not persisted) so
+ * memoryToken is kept in runtime state (not persisted) so
  * useSocket can authenticate WebSocket connections without hitting localStorage.
  */
 const useStore = create(
@@ -13,7 +13,7 @@ const useStore = create(
     (set) => ({
       // auth state — token is memory-only, never persisted
       token: null,      // kept for legacy compat but excluded from partialize
-      memoryToken: null, // CRIT-13: used by useSocket for WS auth
+      memoryToken: null, // used by useSocket for WS auth
       user: null,
 
       // UI state

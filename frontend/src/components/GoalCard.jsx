@@ -1,4 +1,3 @@
-import React from 'react';
 
 const GoalCard = ({ goal, onDelete }) => {
   const progress = goal.target_value > 0 ? (goal.current_value / goal.target_value * 100) : 0;

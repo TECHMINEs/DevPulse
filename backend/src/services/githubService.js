@@ -6,15 +6,14 @@ const { decrypt } = require('../utils/crypto');
 const hashToken = (token) =>
   crypto.createHash('sha256').update(token).digest('hex').slice(0, 20);
 
-// In-Memory cache for GitHub API responses since we eliminated Redis
+// In-memory cache for GitHub API responses.
 const memoryCache = new Map();
 
 const CACHE_TTL = 900;     // 15 minutes in seconds
-const MAX_CACHE_SIZE = 2000; // CRIT-17: prevent unbounded growth
+const MAX_CACHE_SIZE = 2000; // prevent unbounded growth
 
-// Helper to set cache with expiration
 const setCache = (key, value, ttlSeconds) => {
-  // CRIT-17: evict oldest entry if at capacity
+  // evict oldest entry if at capacity
   if (memoryCache.size >= MAX_CACHE_SIZE) {
     const oldestKey = memoryCache.keys().next().value;
     memoryCache.delete(oldestKey);
@@ -23,7 +22,6 @@ const setCache = (key, value, ttlSeconds) => {
   memoryCache.set(key, { value, expiresAt });
 };
 
-// Helper to get from cache
 const getCache = (key) => {
   const item = memoryCache.get(key);
   if (!item) return null;
@@ -34,7 +32,7 @@ const getCache = (key) => {
   return item.value;
 };
 
-// CRIT-17: periodic cache pruning every 5 minutes
+// periodic cache pruning every 5 minutes
 setInterval(() => {
   const now = Date.now();
   for (const [k, v] of memoryCache) {
@@ -43,7 +41,6 @@ setInterval(() => {
 }, 5 * 60 * 1000).unref(); // .unref() so this doesn't prevent process exit
 const GITHUB_API_BASE = 'https://api.github.com';
 
-// helper to build axios instance with auth
 const createGithubClient = (accessToken) => {
   return axios.create({
     baseURL: GITHUB_API_BASE,
@@ -56,7 +53,6 @@ const createGithubClient = (accessToken) => {
   });
 };
 
-// cache wrapper — try cache first, fall back to API
 const cachedRequest = async (cacheKey, requestFn) => {
   const cached = getCache(cacheKey);
   if (cached) {
@@ -64,15 +60,13 @@ const cachedRequest = async (cacheKey, requestFn) => {
     return cached;
   }
 
-  // cache miss — make the request
   const data = await requestFn();
   setCache(cacheKey, data, CACHE_TTL);
 
   return data;
 };
 
-// fetch all repos for a user (handles pagination)
-// this was trickier than expected — GitHub paginates at 100 items
+// All repos for a user, across pages.
 const fetchUserRepos = async (accessToken) => {
   const client = createGithubClient(accessToken);
   const cacheKey = `gh:repos:${hashToken(accessToken)}`;
@@ -96,7 +90,6 @@ const fetchUserRepos = async (accessToken) => {
 
       allRepos = allRepos.concat(response.data);
 
-      // check if there are more pages
       if (response.data.length < perPage) {
         hasMore = false;
         break;
@@ -126,7 +119,7 @@ const fetchUserRepos = async (accessToken) => {
   });
 };
 
-// fetch commits for a specific repo (last 90 days by default)
+// Commits for a repo over the last 90 days.
 const fetchRepoCommits = async (accessToken, owner, repo, since = null) => {
   const client = createGithubClient(accessToken);
   const sinceDate = since || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
@@ -181,8 +174,7 @@ const fetchRepoCommits = async (accessToken, owner, repo, since = null) => {
   });
 };
 
-// fetch commit details (additions/deletions/files) for a specific commit
-// this is a separate API call per commit, which is why we need caching badly
+// Additions, deletions and files for one commit (one API call each, hence the cache).
 const fetchCommitDetails = async (accessToken, owner, repo, sha) => {
   const client = createGithubClient(accessToken);
   const cacheKey = `gh:commit-detail:${owner}/${repo}:${sha}`;
@@ -196,14 +188,13 @@ const fetchCommitDetails = async (accessToken, owner, repo, sha) => {
         files: (response.data.files || []).length,
       };
     } catch (error) {
-      // not 100% sure this is the best fallback but it prevents crashes
+      // Fall back to zeros rather than failing the whole sync.
       logger.warn('Failed to fetch commit details', { sha, error: error.message });
       return { sha, stats: { additions: 0, deletions: 0, total: 0 }, files: 0 };
     }
   });
 };
 
-// fetch user's GitHub profile info
 const fetchUserProfile = async (accessToken) => {
   const client = createGithubClient(accessToken);
   const cacheKey = `gh:profile:${hashToken(accessToken)}`;
@@ -214,12 +205,12 @@ const fetchUserProfile = async (accessToken) => {
   });
 };
 
-// clear all cache for a user (used when force-syncing)
+// Clears a user's cache before a forced sync.
 const clearUserCache = async (accessToken) => {
   const userHash = hashToken(accessToken);
   let cleared = 0;
   for (const key of memoryCache.keys()) {
-    if (key.includes(userHash)) { // BUG-12: fixed cache key collision
+    if (key.includes(userHash)) { // fixed cache key collision
       memoryCache.delete(key);
       cleared++;
     }

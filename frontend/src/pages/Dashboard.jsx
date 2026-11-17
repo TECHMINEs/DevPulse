@@ -1,4 +1,3 @@
-import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Navigate } from 'react-router-dom';
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
@@ -25,7 +24,7 @@ const Dashboard = () => {
 
   const { triggerSync, isTriggering } = useSync();
 
-  // fetch all dashboard data - BUG-02: split into granular queries
+  // fetch all dashboard data
   const { data: profile, isLoading: profileLoading, isError: profileError } = useQuery({ queryKey: ['profile'], queryFn: getProfile });
   const { data: wellnessData } = useQuery({ queryKey: ['wellness', 90], queryFn: () => getWellness(90) });
   const { data: commitData } = useQuery({ queryKey: ['commits'], queryFn: () => getCommits(365) });
@@ -51,7 +50,6 @@ const Dashboard = () => {
   const currentScore = wellnessChart.length > 0 ? wellnessChart[wellnessChart.length - 1].score : 0;
   const streak = streakData?.current_streak || 0;
 
-  // calculate this week's commits
   const thisWeekCommits = (commitData?.commits || []).filter((c) => {
     const d = new Date(c.date);
     const weekAgo = new Date();
@@ -60,7 +58,6 @@ const Dashboard = () => {
     return d >= weekAgo;
   }).reduce((sum, c) => sum + parseInt(c.count), 0) || 0;
 
-  // calculate night commit %
   const nightCommitPct = wellnessChart.length > 0
     ? wellnessChart[wellnessChart.length - 1].nightPct
     : 0;

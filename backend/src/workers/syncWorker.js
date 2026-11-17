@@ -10,7 +10,7 @@ const { getIO } = require('../socket/socketHandlers');
 syncQueue.process('sync-github', async (job) => {
   const { userId } = job.data;
 
-  // SEC-05: fetch access token from DB instead of reading from job data
+  // fetch access token from DB instead of reading from job data
   const tokenResult = await db.query(
     'SELECT access_token FROM users WHERE id = $1',
     [userId]
@@ -88,7 +88,7 @@ syncQueue.process('sync-github', async (job) => {
         const [owner, repoName] = repo.full_name.split('/');
         const commits = await githubService.fetchRepoCommits(accessToken, owner, repoName);
 
-        // CRIT-15: batch commit detail fetches (5 at a time) instead of sequential awaits
+        // batch commit detail fetches (5 at a time) instead of sequential awaits
         const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
         const recentCommits = commits.filter(c => new Date(c.date) > thirtyDaysAgo);
         const olderCommits = commits.filter(c => new Date(c.date) <= thirtyDaysAgo);

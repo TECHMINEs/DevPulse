@@ -1,7 +1,7 @@
 const db = require('../db/pool');
 
-// not 100% sure this is the right formula but the scores feel right empirically
-// the idea is: more night commits = worse wellness, more regular hours = better
+// Heuristic wellness score, 0-100: late-night and weekend work lower it,
+// regular hours and good commit messages raise it.
 // streak bonus caps at 30 days to prevent rewarding unhealthy obsession
 const computeWellnessScore = (features) => {
   const {
@@ -16,7 +16,7 @@ const computeWellnessScore = (features) => {
 
   let score = 100;
 
-  // penalize night commits (midnight to 5am) — BUG-11: use multiplier
+  // penalize night commits (midnight to 5am) — use multiplier
   score -= (night_commit_pct * 40);
 
   // penalize heavy weekend work (some is fine, >60% is burnout territory)
@@ -27,7 +27,6 @@ const computeWellnessScore = (features) => {
   }
 
   // penalize very late average commit hour
-  // avg_commit_hour is always in [0,23] so "> 23" was dead code — fixed.
   if (avg_commit_hour >= 22 || avg_commit_hour < 5) {
     score -= 15; // 10pm–5am average: major red flag
   } else if (avg_commit_hour >= 20) {
@@ -63,24 +62,22 @@ const computeWellnessScore = (features) => {
     score = 50; // neutral — we can't really score someone with no data
   }
 
-  // clamp to 0-100
   score = Math.max(0, Math.min(100, Math.round(score * 100) / 100));
 
   return score;
 };
 
-// determine risk flag based on score
 const getRiskFlag = (score) => {
   if (score >= 70) return 'none';
   if (score >= 40) return 'caution';
   return 'high';
 };
 
-// calculate and store wellness score for a specific date
+// Computes and stores the wellness score for one date.
 const calculateDailyWellness = async (userId, date = new Date()) => {
   const dateStr = date.toISOString().split('T')[0];
 
-  // get commits for the last 7 days (rolling window for the score)
+  // The score uses a rolling seven-day window.
   const sevenDaysAgo = new Date(date);
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -117,20 +114,17 @@ const calculateDailyWellness = async (userId, date = new Date()) => {
     return { score, risk_flag: 'none' };
   }
 
-  // calculate features
   const nightCommits = commits.filter(c => c.hour_of_day >= 0 && c.hour_of_day < 5).length;
   const weekendCommits = commits.filter(c => c.is_weekend).length;
   const totalHours = commits.reduce((sum, c) => sum + c.hour_of_day, 0);
   const totalMsgLen = commits.reduce((sum, c) => sum + (c.message_length || 0), 0);
   const totalLinesChanged = commits.reduce((sum, c) => sum + (c.lines_added || 0) + (c.lines_removed || 0), 0);
 
-  // calculate lines changed std dev
   const linesPerCommit = commits.map(c => (c.lines_added || 0) + (c.lines_removed || 0));
   const avgLines = linesPerCommit.reduce((a, b) => a + b, 0) / linesPerCommit.length;
   const variance = linesPerCommit.reduce((sum, l) => sum + Math.pow(l - avgLines, 2), 0) / linesPerCommit.length;
   const stddev = Math.sqrt(variance);
 
-  // calculate streak
   const streakDays = await calculateStreak(userId, date);
 
   const features = {
@@ -151,7 +145,7 @@ const calculateDailyWellness = async (userId, date = new Date()) => {
     lines_changed: totalLinesChanged,
   });
 
-  // FEAT-02: Send Slack alert if score is below user's threshold
+  // Send Slack alert if score is below user's threshold
   const userRes = await db.query(
     'SELECT slack_webhook_url, username, alert_threshold FROM users WHERE id = $1',
     [userId]
@@ -170,7 +164,7 @@ const calculateDailyWellness = async (userId, date = new Date()) => {
   return { score, risk_flag, features };
 };
 
-// calculate current streak (consecutive days with at least 1 commit)
+// Consecutive days with at least one commit, ending today or yesterday.
 const calculateStreak = async (userId, endDate = new Date()) => {
   const result = await db.query(`
     SELECT DISTINCT DATE(committed_at) as commit_date
@@ -189,10 +183,8 @@ const calculateStreak = async (userId, endDate = new Date()) => {
 
   const commitDates = new Set(result.rows.map(r => typeof r.commit_date === 'string' ? r.commit_date.substring(0, 10) : r.commit_date.toISOString().substring(0, 10)));
 
-  // check today first
   const todayStr = currentDate.toISOString().split('T')[0];
   if (!commitDates.has(todayStr)) {
-    // check yesterday — streak might still be active
     currentDate.setDate(currentDate.getDate() - 1);
     const yesterdayStr = currentDate.toISOString().split('T')[0];
     if (!commitDates.has(yesterdayStr)) {
@@ -200,7 +192,6 @@ const calculateStreak = async (userId, endDate = new Date()) => {
     }
   }
 
-  // count consecutive days backwards
   while (commitDates.has(currentDate.toISOString().split('T')[0])) {
     streak++;
     currentDate.setDate(currentDate.getDate() - 1);
@@ -210,7 +201,6 @@ const calculateStreak = async (userId, endDate = new Date()) => {
   return streak;
 };
 
-// upsert wellness score into the database
 const upsertWellnessScore = async (userId, dateStr, score, riskFlag, features) => {
   await db.query(`
     INSERT INTO wellness_scores (
@@ -242,7 +232,6 @@ const upsertWellnessScore = async (userId, dateStr, score, riskFlag, features) =
   ]);
 };
 
-// get wellness history for charts
 const getWellnessHistory = async (userId, days = 90) => {
   const result = await db.query(`
     SELECT score_date, score, risk_flag, night_commit_pct, weekend_commit_pct,

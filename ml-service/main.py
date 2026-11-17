@@ -42,9 +42,6 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization"],
 )
 
-# ============================================================================
-# Load models at startup
-# ============================================================================
 MODEL_DIR = os.path.dirname(os.path.abspath(__file__))
 classifier_data = None
 regressor_data = None
@@ -57,25 +54,22 @@ try:
 
     if os.path.exists(classifier_path):
         classifier_data = joblib.load(classifier_path)
-        print("✅ Classifier model loaded")
+        print("Classifier model loaded")
 
     if os.path.exists(regressor_path):
         regressor_data = joblib.load(regressor_path)
-        print("✅ Regressor model loaded")
+        print("Regressor model loaded")
 
     if os.path.exists(info_path):
         with open(info_path) as f:
             model_info = json.load(f)
-        print("✅ Model info loaded")
+        print("Model info loaded")
 
 except Exception as e:
-    print(f"⚠️ Failed to load models: {e}")
-    print("Run 'python train.py' first to generate models")
+    print(f"Failed to load models: {e}")
+    print("Run train.py first to generate them")
 
 
-# ============================================================================
-# Request/Response schemas
-# ============================================================================
 class PredictionRequest(BaseModel):
     avg_commit_hour: float = Field(..., ge=0, le=24, description="Average commit hour (0-23)")
     night_commit_pct: float = Field(..., ge=0, le=1, description="Percentage of night commits (0-1)")
@@ -122,9 +116,6 @@ class HealthResponse(BaseModel):
     model_loaded: bool
 
 
-# ============================================================================
-# Endpoints
-# ============================================================================
 @app.post("/predict", response_model=PredictionResponse)
 async def predict(request: PredictionRequest):
     """
@@ -137,7 +128,6 @@ async def predict(request: PredictionRequest):
             detail="Models not loaded. Run 'python train.py' first.",
         )
 
-    # prepare feature vector
     features = np.array([[
         request.avg_commit_hour,
         request.night_commit_pct,
@@ -152,14 +142,12 @@ async def predict(request: PredictionRequest):
     # scale features using the scaler from training
     features_scaled = classifier_data["scaler"].transform(features)
 
-    # predict risk flag (classifier)
     risk_flag = classifier_data["model"].predict(features_scaled)[0]
 
     # get class probabilities for confidence
     proba = classifier_data["model"].predict_proba(features_scaled)[0]
     confidence = float(max(proba))
 
-    # predict numeric score (regressor)
     score_raw = regressor_data["model"].predict(features_scaled)[0]
     score = float(np.clip(score_raw, 0, 100))
 
@@ -205,9 +193,7 @@ async def health_check():
     )
 
 
-# ============================================================================
 # Run with: uvicorn main:app --host 0.0.0.0 --port 8000
-# ============================================================================
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

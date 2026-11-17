@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 import { getScoreLabel } from '../utils/scoreUtils';
 
 const WellnessGauge = ({ score = 0, size = 200, showLabel = true }) => {
@@ -37,7 +37,6 @@ const WellnessGauge = ({ score = 0, size = 200, showLabel = true }) => {
 
       ctx.clearRect(0, 0, size, size);
 
-      // background arc
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius, startAngle, endAngle);
       ctx.strokeStyle = '#000000'; // surface-800
@@ -45,7 +44,6 @@ const WellnessGauge = ({ score = 0, size = 200, showLabel = true }) => {
       ctx.lineCap = 'round';
       ctx.stroke();
 
-      // Determine colors based on score
       const scoreAngle = startAngle + (endAngle - startAngle) * (animatedScore.current / 100);
       const gradient = ctx.createLinearGradient(0, size, size, 0);
 
@@ -79,14 +77,12 @@ const WellnessGauge = ({ score = 0, size = 200, showLabel = true }) => {
       ctx.lineCap = 'round';
       ctx.stroke();
 
-      // score text
       ctx.fillStyle = '#FFFFFF';
       ctx.font = `bold ${size * 0.18}px Inter, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(Math.round(animatedScore.current), centerX, centerY - 5);
 
-      // label text
       if (showLabel) {
         ctx.fillStyle = '#A3A3A3';
         ctx.font = `500 ${size * 0.07}px Inter, sans-serif`;

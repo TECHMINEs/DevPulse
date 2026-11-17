@@ -102,7 +102,7 @@ function resolveDemo(url) {
   return {};
 }
 
-// Request interceptor to serve demo data in static mode
+// Static builds answer API calls from demo data.
 client.interceptors.request.use(async (config) => {
   if (isStaticDemo) {
     config.adapter = async () => {
@@ -119,7 +119,6 @@ client.interceptors.request.use(async (config) => {
   return config;
 });
 
-// Response interceptor
 client.interceptors.response.use(
   (response) => {
     if (response.data) {

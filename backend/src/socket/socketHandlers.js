@@ -5,12 +5,11 @@ const logger = require('../utils/logger');
 let _ioInstance = null;
 const getIO = () => _ioInstance;
 
-// Socket.io event handlers
 const setupSocketHandlers = (io) => {
-  // make io globally available for workers
+  // Workers emit through the global io.
   _ioInstance = io;
 
-  // SEC-02: JWT auth middleware for Socket.io — now also checks token_version
+  // JWT auth middleware for Socket.io — now also checks token_version
   // so revoked tokens (after logout) cannot maintain WebSocket connections.
   io.use(async (socket, next) => {
     let token = socket.handshake.auth?.token;
@@ -30,7 +29,7 @@ const setupSocketHandlers = (io) => {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // SEC-02: validate token_version against DB to catch revoked tokens
+      // validate token_version against DB to catch revoked tokens
       const result = await db.query(
         'SELECT id, token_version FROM users WHERE id = $1',
         [decoded.userId]
@@ -58,7 +57,6 @@ const setupSocketHandlers = (io) => {
   io.on('connection', (socket) => {
     logger.info('Socket connected', { userId: socket.userId, socketId: socket.id });
 
-    // auto-join user's room
     socket.join(`user:${socket.userId}`);
 
     // handle explicit subscribe (for backward compat)

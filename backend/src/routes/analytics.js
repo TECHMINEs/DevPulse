@@ -5,7 +5,7 @@ const wellnessService = require('../services/wellnessService');
 const mlService = require('../services/mlService');
 const logger = require('../utils/logger');
 
-// SAFE_USER_COLUMNS: never expose access_token / gitlab_access_token (PERF-05 / CRIT-11)
+// SAFE_USER_COLUMNS: never expose access_token / gitlab_access_token
 const SAFE_USER_COLS = `
   u.id, u.username, u.display_name, u.email, u.avatar_url, u.bio,
   u.location, u.company, u.provider, u.role, u.focus,
@@ -18,7 +18,7 @@ router.get('/dashboard', authenticate, async (req, res) => {
   try {
     const userId = req.user.id;
     const [profileResult, wellnessResult, commitsResult, hourlyResult, languagesResult, reposResult, achievementsResult] = await Promise.all([
-      // PERF-05: explicit columns — no access_token leakage
+      // explicit columns — no access_token leakage
       db.query(`SELECT ${SAFE_USER_COLS},
         (SELECT COUNT(*) FROM commit_snapshots WHERE user_id=u.id) as total_commits,
         (SELECT COUNT(*) FROM repositories WHERE user_id=u.id) as total_repos,
@@ -27,14 +27,14 @@ router.get('/dashboard', authenticate, async (req, res) => {
         (SELECT ws.risk_flag FROM wellness_scores ws WHERE ws.user_id=u.id ORDER BY ws.score_date DESC LIMIT 1) as risk_flag
         FROM users u WHERE u.id=$1`, [userId]),
       wellnessService.getWellnessHistory(userId, 90),
-      // CRIT-05: date('now', '-365 days') instead of CURRENT_DATE - 365
+      // date('now', '-365 days') instead of CURRENT_DATE - 365
       db.query(`SELECT DATE(committed_at) as date, COUNT(*) as count
         FROM commit_snapshots
         WHERE user_id=$1 AND committed_at >= date('now', '-365 days')
         GROUP BY DATE(committed_at) ORDER BY date ASC`, [userId]),
       db.query('SELECT hour_of_day as hour, COUNT(*) as count FROM commit_snapshots WHERE user_id=$1 GROUP BY hour_of_day ORDER BY hour_of_day', [userId]),
       db.query('SELECT language, COUNT(*) as count FROM repositories WHERE user_id=$1 AND language IS NOT NULL GROUP BY language ORDER BY count DESC LIMIT 10', [userId]),
-      // CRIT-05: date('now', '-30 days') instead of CURRENT_DATE - 30
+      // date('now', '-30 days') instead of CURRENT_DATE - 30
       db.query(`SELECT r.id, r.name, r.description, r.language, COUNT(cs.id) as commit_count
         FROM repositories r
         LEFT JOIN commit_snapshots cs ON r.id=cs.repo_id AND cs.committed_at >= date('now', '-30 days')
@@ -123,7 +123,6 @@ router.get('/hourly', authenticate, async (req, res) => {
       ORDER BY hour_of_day
     `, [req.user.id]);
 
-    // fill in missing hours with 0
     const hourlyData = Array.from({ length: 24 }, (_, i) => {
       const found = result.rows.find(r => parseInt(r.hour) === i);
       return { hour: i, count: found ? parseInt(found.count) : 0 };
@@ -180,7 +179,7 @@ router.get('/streak', authenticate, async (req, res) => {
       WHERE user_id = $1
     `, [req.user.id]);
 
-    // CRIT-05: use SQLite date syntax
+    // use SQLite date syntax
     const calendarResult = await db.query(`
       SELECT DATE(committed_at) as date, COUNT(*) as count
       FROM commit_snapshots
@@ -251,7 +250,7 @@ router.get('/radar', authenticate, async (req, res) => {
       WHERE user_id = $1 AND committed_at >= $2
     `, [req.user.id, thirtyDaysAgo.toISOString()]);
 
-    // CRIT-05: SQLite date syntax
+    // SQLite date syntax
     const wellnessResult = await db.query(`
       SELECT AVG(score) as avg_score
       FROM wellness_scores
@@ -298,7 +297,7 @@ router.get('/benchmark', authenticate, async (req, res) => {
       languages_used: 3,
     };
 
-    // CRIT-05: all CURRENT_DATE - N replaced with date('now', '-N days')
+    // all CURRENT_DATE - N replaced with date('now', '-N days')
     const commitResult = await db.query(`
       SELECT
         CAST(COUNT(*) AS REAL) / MAX(1, CAST((julianday('now') - julianday(MIN(committed_at))) / 7 AS INTEGER)) as commits_per_week,
@@ -355,7 +354,7 @@ router.get('/benchmark', authenticate, async (req, res) => {
  */
 router.get('/predictions', authenticate, async (req, res) => {
   try {
-    // CRIT-05: SQLite date syntax
+    // SQLite date syntax
     const recentData = await db.query(`
       SELECT
         AVG(hour_of_day) as avg_commit_hour,
@@ -377,7 +376,7 @@ router.get('/predictions', authenticate, async (req, res) => {
     const features = recentData.rows[0];
     const streak = streakResult.rows[0]?.streak_days || 0;
 
-    // CRIT-16: Parallelize all 7 ML calls instead of sequential awaits
+    // Parallelize all 7 ML calls instead of sequential awaits
     const predictionPromises = Array.from({ length: 7 }, (_, i) => {
       const day = i + 1;
       const futureDate = new Date();

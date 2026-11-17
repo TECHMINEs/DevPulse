@@ -3,8 +3,7 @@ const logger = require('../utils/logger');
 
 const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://localhost:8000';
 
-// calls the FastAPI ML service to get wellness predictions
-// took a while to get the feature format right between Node and Python
+// Client for the FastAPI wellness model.
 const predictWellness = async (features) => {
   try {
     const response = await axios.post(`${ML_SERVICE_URL}/predict`, features, {
@@ -27,7 +26,6 @@ const predictWellness = async (features) => {
   }
 };
 
-// check if ML service is healthy
 const healthCheck = async () => {
   try {
     const response = await axios.get(`${ML_SERVICE_URL}/health`, { timeout: 5000 });
@@ -37,7 +35,6 @@ const healthCheck = async () => {
   }
 };
 
-// get model info
 const getModelInfo = async () => {
   try {
     const response = await axios.get(`${ML_SERVICE_URL}/model-info`, { timeout: 5000 });

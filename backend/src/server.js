@@ -12,7 +12,6 @@ const logger = require('./utils/logger');
 const { setupSocketHandlers } = require('./socket/socketHandlers');
 const cron = require('node-cron');
 
-// Route imports
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const syncRoutes = require('./routes/sync');
@@ -27,8 +26,6 @@ const adminRoutes = require('./routes/admin');
 const app = express();
 const server = http.createServer(app);
 
-// Socket.io setup — this was way more complex than I expected
-// had to figure out CORS + auth handshake together
 const io = new Server(server, {
   cors: {
     origin: process.env.NODE_ENV === 'production' 
@@ -41,14 +38,9 @@ const io = new Server(server, {
   pingInterval: 25000,
 });
 
-// make io accessible from routes/services
 app.set('io', io);
 
-// ============================================================================
-// MIDDLEWARE
-// ============================================================================
 
-// security headers — helmet is a must
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -79,14 +71,13 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
-// CORS — took a while to get this right with credentials + cookies
+// CORS with credentials, so the auth cookie is sent.
 app.use(cors(corsOptions));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// passport setup for OAuth
 app.use(passport.initialize());
 require('./config/passport')(passport);
 
@@ -100,9 +91,6 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
-// ============================================================================
-// ROUTES
-// ============================================================================
 app.use('/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/sync', syncRoutes);
@@ -114,13 +102,13 @@ app.use('/api/teams', teamRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Swagger docs — super helpful for the portfolio
+// API docs at /api-docs.
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customCss: '.swagger-ui .topbar { display: none }',
   customSiteTitle: 'DevPulse API Documentation',
 }));
 
-// FEAT-05: health check — verifies DB connectivity, returns 503 if unhealthy
+// health check — verifies DB connectivity, returns 503 if unhealthy
 app.get('/health', async (req, res) => {
   const checks = { database: 'ok' };
   let healthy = true;
@@ -139,14 +127,8 @@ app.get('/health', async (req, res) => {
   });
 });
 
-// ============================================================================
-// SOCKET.IO
-// ============================================================================
 setupSocketHandlers(io);
 
-// ============================================================================
-// SCHEDULED JOBS AND WORKERS
-// ============================================================================
 require('./workers/syncWorker');
 
 // Weekly digest — every Monday at 08:00 in DIGEST_TIMEZONE (IANA name, default UTC).
@@ -163,10 +145,6 @@ cron.schedule('0 8 * * 1', async () => {
   }
 }, { timezone: DIGEST_TIMEZONE });
 
-// ============================================================================
-// ERROR HANDLING
-// ============================================================================
-// 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Not found', path: req.path });
 });
@@ -189,9 +167,6 @@ app.use((err, req, res, _next) => {
   res.status(err.status || 500).json(response);
 });
 
-// ============================================================================
-// START SERVER
-// ============================================================================
 const PORT = process.env.PORT || 5001;
 const { initDB } = require('./db/pool');
 const fs = require('fs');
@@ -217,7 +192,7 @@ const startServer = async () => {
 
 startServer();
 
-// QUAL-10: graceful shutdown — wait for in-flight sync jobs before closing
+// graceful shutdown — wait for in-flight sync jobs before closing
 process.on('SIGTERM', async () => {
   logger.info('SIGTERM received, draining queue...');
   try {

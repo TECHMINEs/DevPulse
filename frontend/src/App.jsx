@@ -1,10 +1,9 @@
-import React from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import useStore from './store/useStore';
 import client from './api/client';
 
-// Static imports to prevent Safari ChunkLoadError
+// Static imports: lazy chunks failed to load in Safari.
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Analytics from './pages/Analytics';
@@ -28,7 +27,6 @@ import { useEffect } from 'react';
 import BrandBar from './components/brand/BrandBar';
 import BrandFooter from './components/brand/BrandFooter';
 
-// protected route wrapper
 const ProtectedRoute = ({ children }) => {
   const user = useStore((s) => s.user);
   const location = useLocation();
@@ -40,10 +38,7 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-/**
- * CRIT-14: AdminRoute now verifies role server-side before rendering.
- * localStorage role is trivially spoofable; an API call confirms the actual role.
- */
+// The stored role can be spoofed, so admin access is confirmed by the API first.
 const AdminRoute = ({ children }) => {
   const user = useStore((s) => s.user);
 
@@ -79,8 +74,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    // CRIT-12: use navigate() instead of window.location.href to avoid full
-    // page reload which destroys the React query cache and component state.
+    // navigate() rather than a full reload keeps the query cache and app state.
     const handleUnauthorized = () => {
       useStore.getState().clearAuth();
       navigate('/login', { replace: true });
@@ -113,7 +107,7 @@ function App() {
         <Route path="/team/:slug" element={<ProtectedRoute><TeamDashboard /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
 
-        {/* Admin route — CRIT-14: server-side role verified before rendering */}
+        {/* Admin route — server-side role verified before rendering */}
         <Route path="/admin" element={<ProtectedRoute><AdminRoute><AdminPanel /></AdminRoute></ProtectedRoute>} />
 
         {/* Redirects */}

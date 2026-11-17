@@ -32,7 +32,6 @@ router.get('/profile', authenticate, async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // get latest wellness score
     const wellnessResult = await db.query(`
       SELECT score, risk_flag, streak_days
       FROM wellness_scores
@@ -135,7 +134,6 @@ router.get('/:username/public', async (req, res) => {
       return res.status(404).json({ error: 'Profile not found or is private' });
     }
 
-    // get top language
     const langResult = await db.query(`
       SELECT r.language, COUNT(cs.id) as count
       FROM repositories r
@@ -157,7 +155,6 @@ router.get('/:username/public', async (req, res) => {
       ORDER BY ws.score_date ASC
     `, [req.params.username]);
 
-    // get earned achievements
     const achievementsResult = await db.query(`
       SELECT a.name, a.icon, a.category, ua.earned_at
       FROM user_achievements ua
@@ -167,7 +164,6 @@ router.get('/:username/public', async (req, res) => {
       ORDER BY ua.earned_at DESC
     `, [req.params.username]);
 
-    // get longest streak
     const streakResult = await db.query(`
       SELECT MAX(streak_days) as longest_streak
       FROM wellness_scores ws

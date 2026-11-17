@@ -5,7 +5,6 @@ const db = require('../db/pool');
 const logger = require('../utils/logger');
 
 // Weekly digest worker — processes every Monday at 8am
-// email template broken on gmail, had to inline all css
 digestQueue.process('send-digests', async () => {
   logger.info('Processing weekly digest job');
 

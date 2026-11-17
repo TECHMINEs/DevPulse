@@ -17,7 +17,7 @@ const authRateLimiter = new RateLimiterMemory({
   blockDuration: 120,
 });
 
-// CRIT-02: sync limiter — 3 triggers per 5 minutes to prevent GitHub rate limit abuse
+// sync limiter — 3 triggers per 5 minutes to prevent GitHub rate limit abuse
 const syncRateLimiter = new RateLimiterMemory({
   points: 3,
   duration: 300,     // 5 minutes
